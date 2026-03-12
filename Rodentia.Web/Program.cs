@@ -1,4 +1,9 @@
+using Microsoft.EntityFrameworkCore;
+using Rodentia.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<RodentiaDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
