@@ -11,6 +11,12 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.Seq("http://localhost:5341")
+    .CreateLogger();
+
 builder.Services.AddDbContext<RodentiaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
