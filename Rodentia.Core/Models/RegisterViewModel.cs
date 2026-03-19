@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Rodentia.Core.Entities;
 
-namespace Rodentia.Web.Models;
+namespace Rodentia.Core.Models;
 
 public class RegisterViewModel
 {

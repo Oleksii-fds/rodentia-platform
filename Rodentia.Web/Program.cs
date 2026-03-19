@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Rodentia.Core.Entities; 
 using Rodentia.Data;           
 using Serilog;
+using Rodentia.Core.Interfaces; 
+using Rodentia.Core.Models;  
+using Rodentia.Core.Services;   
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +24,8 @@ builder.Host.UseSerilog();
 builder.Services.AddDbContext<RodentiaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+
 builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 {
     options.Password.RequireDigit = false;
@@ -31,7 +37,7 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 .AddEntityFrameworkStores<RodentiaDbContext>()
 .AddDefaultTokenProviders();
 
-
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddControllersWithViews();
 
