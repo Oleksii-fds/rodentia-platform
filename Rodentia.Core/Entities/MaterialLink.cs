@@ -1,3 +1,4 @@
+#nullable enable
 public class MaterialLink
 {
     public Guid Id { get; set; } = Guid.NewGuid();

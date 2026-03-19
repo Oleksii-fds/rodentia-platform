@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rodentia.Data;
@@ -11,9 +12,11 @@ using Rodentia.Data;
 namespace Rodentia.Data.Migrations
 {
     [DbContext(typeof(RodentiaDbContext))]
-    partial class RodentiaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260319212405_AddIdentityToUser")]
+    partial class AddIdentityToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -222,6 +225,7 @@ namespace Rodentia.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Text")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -322,9 +326,11 @@ namespace Rodentia.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")

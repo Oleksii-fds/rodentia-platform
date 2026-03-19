@@ -1,3 +1,4 @@
+#nullable enable
 namespace Rodentia.Web.Models;
 
 public class ErrorViewModel

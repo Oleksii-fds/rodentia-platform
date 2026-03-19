@@ -1,0 +1,96 @@
+@using Rodentia.Core.Entities
+@model Rodentia.Web.Models.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Реєстрація";
+}
+
+<style>
+    body { background-color: #F5F5F5; font-family: 'Segoe UI', sans-serif; }
+    
+    .rodentia-logo { font-size: 3rem; font-weight: bold; color: #FF7F27; text-align: center; margin-bottom: 0.5rem; }
+    .rodentia-subtitle { font-size: 1.5rem; color: #333; text-align: center; margin-bottom: 2rem; }
+    
+    .btn-orange { background-color: #FF7F27; border-color: #FF7F27; color: white; border-radius: 10px; padding: 10px 20px; font-weight: bold; width: 100%; font-size: 1.1rem; }
+    .btn-orange:hover { background-color: #E66A1F; border-color: #E66A1F; color: white; }
+    .form-control { border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid #ced4da; }
+    
+    .form-group:not(.role-selector) label { display: none; } 
+    
+    .role-selector label.form-label { 
+        display: block !important; 
+        font-weight: 500; 
+        color: #333; 
+        margin-bottom: 0;
+    }
+
+    .btn-outline-orange { color: #555; background-color: #F0F0F0; border-color: #ccc; border-radius: 10px; transition: 0.3s; }
+    .btn-check:checked + .btn-outline-orange { background-color: #FF7F27; border-color: #FF7F27; color: white; }
+    .btn-outline-orange:hover { background-color: #FF7F27; color: white; }
+
+    .form-control:focus {
+        border-color: #FF7F27;
+        box-shadow: 0 0 0 0.25rem rgba(255, 127, 39, 0.25);
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-lg p-4" style="border-radius: 20px; border: none;">
+                <div class="rodentia-logo">Rodentia</div>
+                <div class="rodentia-subtitle">Створення акаунта</div>
+
+                <div class="card-body p-0">
+                    <form asp-action="Register" method="post">
+                        
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                        <div class="form-group mb-4 d-flex align-items-center role-selector">
+                            <label class="form-label me-auto">Хто ви?</label>
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" asp-for="Role" id="roleUchen" value="@UserRole.Student" autocomplete="off" checked>
+                                <label class="btn btn-outline-orange px-4 py-2" for="roleUchen">Учень</label>
+
+                                <input type="radio" class="btn-check" asp-for="Role" id="roleVykladach" value="@UserRole.Teacher" autocomplete="off">
+                                <label class="btn btn-outline-orange px-4 py-2" for="roleVykladach">Викладач</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <input asp-for="FullName" class="form-control" placeholder="Ім'я та Прізвище" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <input asp-for="Email" class="form-control" placeholder="Email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <input asp-for="Password" class="form-control" placeholder="Пароль" type="password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <input asp-for="ConfirmPassword" class="form-control" placeholder="Підтвердіть пароль" type="password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-orange">Зареєструватися</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card-footer text-center mt-3 bg-white border-0">
+                    <p>Вже маєте акаунт? <a asp-action="Login" style="color: #FF7F27; font-weight: bold; text-decoration: none;">Увійти</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

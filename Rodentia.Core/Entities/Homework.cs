@@ -1,3 +1,4 @@
+#nullable enable
 public class Homework
 {
     public Guid Id { get; set; } = Guid.NewGuid();

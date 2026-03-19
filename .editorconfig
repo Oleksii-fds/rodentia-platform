@@ -17,3 +17,5 @@ dotnet_diagnostic.SA1508.severity = none
 dotnet_diagnostic.SA1028.severity = none
 
 dotnet_diagnostic.SA1516.severity = suggestion
+
+generated_code = true
