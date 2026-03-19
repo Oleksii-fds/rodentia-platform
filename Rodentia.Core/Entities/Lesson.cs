@@ -10,15 +10,15 @@ public class Lesson
 
     [Required]
     public Guid TeacherId { get; set; }
-    
+
     [ForeignKey("TeacherId")]
-    public virtual User Teacher { get; set; } = null!; 
+    public virtual User Teacher { get; set; } = null!;
 
     [Required]
     public Guid StudentId { get; set; }
-    
+
     [ForeignKey("StudentId")]
-    public virtual User Student { get; set; } = null!; 
+    public virtual User Student { get; set; } = null!;
 
     [Required]
     [MaxLength(100)]

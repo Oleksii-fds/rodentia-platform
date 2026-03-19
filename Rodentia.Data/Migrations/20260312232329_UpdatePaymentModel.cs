@@ -21,7 +21,7 @@ namespace Rodentia.Data.Migrations
                     Status = table.Column<int>(type: "integer", nullable: false),
                     PaidAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ConfirmedByTeacherId = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 },
                 constraints: table =>
                 {

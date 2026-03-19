@@ -2,6 +2,6 @@ namespace Rodentia.Core.Entities;
 
 public enum UserRole
 {
-    Teacher, 
-    Student  
+    Teacher,
+    Student,
 }

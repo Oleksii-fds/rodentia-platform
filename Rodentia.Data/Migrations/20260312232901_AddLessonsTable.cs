@@ -23,7 +23,7 @@ namespace Rodentia.Data.Migrations
                     DurationMinutes = table.Column<int>(type: "integer", nullable: false),
                     IsCompleted = table.Column<bool>(type: "boolean", nullable: false),
                     PaymentId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Notes = table.Column<string>(type: "text", nullable: true)
+                    Notes = table.Column<string>(type: "text", nullable: true),
                 },
                 constraints: table =>
                 {
