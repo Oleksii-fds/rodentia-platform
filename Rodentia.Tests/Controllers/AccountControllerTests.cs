@@ -48,8 +48,7 @@ public class AccountControllerTests
 
         _controller = new AccountController(
             _authService.Object,
-            _userManager.Object,
-            _signInManager.Object,
+
             _logger.Object);
     }
 
@@ -140,7 +139,7 @@ public class AccountControllerTests
 
         await _controller.Register(model);
 
-        _signInManager.Verify(x => x.SignInAsync(user, false, null), Times.Once);
+    _authService.Verify(x => x.RegisterAsync(It.IsAny<RegisterViewModel>()), Times.Once());   
     }
 
     [Fact]
@@ -160,13 +159,11 @@ public class AccountControllerTests
     [Fact]
     public async Task Logout_CallsSignOutAsync_Once()
     {
-        _signInManager
-            .Setup(x => x.SignOutAsync())
-            .Returns(Task.CompletedTask);
+        _authService.Setup(x => x.SignOutAsync()).Returns(Task.CompletedTask);
 
         await _controller.Logout();
 
-        _signInManager.Verify(x => x.SignOutAsync(), Times.Once);
+        _authService.Verify(x => x.SignOutAsync(), Times.Once());
     }
 
     [Fact]

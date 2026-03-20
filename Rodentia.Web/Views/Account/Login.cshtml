@@ -1,0 +1,48 @@
+@using Rodentia.Core.Models
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "Увійти в акаунт";
+}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-sm border-0 p-4" style="width: 100%; max-width: 420px; border-radius: 15px; background-color: #f9f9f9;">
+        
+        <div class="text-center mb-4">
+            <h1 class="fw-bold" style="color: #ff7a21; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">Rodentia</h1>
+            <h5 class="text-secondary fw-normal">Увійти в акаунт</h5>
+        </div>
+
+        <form asp-controller="Account" asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+            <div class="mb-3">
+                <input asp-for="Email" class="form-control form-control-lg border-light shadow-sm" 
+                       placeholder="Email" style="border-radius: 8px; font-size: 0.95rem;" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <input asp-for="Password" type="password" class="form-control form-control-lg border-light shadow-sm" 
+                       placeholder="Пароль" style="border-radius: 8px; font-size: 0.95rem;" />
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn btn-lg w-100 text-white fw-bold shadow-sm" 
+                    style="background-color: #ff7a21; border-radius: 8px; border: none; padding: 12px;">
+                Увійти
+            </button>
+        </form>
+
+        <div class="text-center mt-3">
+            <a href="#" class="text-decoration-none small fw-medium" style="color: #4c66fb;">Забули пароль? Відновити</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn:hover { background-color: #e66a1a !important; transform: translateY(-1px); transition: 0.2s; }
+    input:focus { border-color: #ff7a21 !important; box-shadow: 0 0 0 0.25rem rgba(255, 122, 33, 0.15) !important; }
+</style>
