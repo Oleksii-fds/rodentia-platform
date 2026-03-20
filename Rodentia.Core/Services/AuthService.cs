@@ -3,7 +3,7 @@ using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
 using Rodentia.Core.Models;
 
-namespace Rodentia.Core.Services; 
+namespace Rodentia.Core.Services;
 
 public class AuthService : IAuthService
 {
@@ -20,13 +20,13 @@ public class AuthService : IAuthService
         string firstName = fullNameParts.FirstOrDefault() ?? "";
         string lastName = fullNameParts.Length > 1 ? fullNameParts[1] : "";
 
-        var user = new User 
-        { 
-            UserName = model.Email, 
-            Email = model.Email, 
-            FirstName = firstName, 
-            LastName = lastName,   
-            Role = model.Role 
+        var user = new User
+        {
+            UserName = model.Email,
+            Email = model.Email,
+            FirstName = firstName,
+            LastName = lastName,
+            Role = model.Role,
         };
 
         return await _userManager.CreateAsync(user, model.Password);

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
-using Rodentia.Core.Models; 
+using Rodentia.Core.Models;
+
 namespace Rodentia.Core.Interfaces;
 
 public interface IAuthService
