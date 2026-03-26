@@ -7,7 +7,7 @@ public class Result<T>
     public T? Data { get; set; }
     public string? ErrorMessage { get; set; }
 
-    public static Result<T> Ok(T data) => new() { Success = true, Data = data };
+    public static Result<T> SuccessData(T data) => new() { Success = true, Data = data };
     public static Result<T> Failure(string message) => new() { Success = false, ErrorMessage = message };
 }
 

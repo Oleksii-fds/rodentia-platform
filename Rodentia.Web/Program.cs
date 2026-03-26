@@ -6,6 +6,7 @@ using Serilog;
 using Rodentia.Core.Interfaces; 
 using Rodentia.Core.Models;  
 using Rodentia.Core.Services;   
+using Rodentia.Data.Repositories;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +39,8 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ILessonRepository, LessonRepository>();
+builder.Services.AddScoped<ILessonService, LessonService>();
 
 builder.Services.AddControllersWithViews();
 

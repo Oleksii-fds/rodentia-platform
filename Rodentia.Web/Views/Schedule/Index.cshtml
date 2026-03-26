@@ -1,0 +1,44 @@
+@model IEnumerable<Rodentia.Core.Entities.Lesson>
+@{ ViewData["Title"] = "Розклад"; }
+
+<h2 class="fw-bold mb-4">Мій Розклад</h2>
+
+<div class="mb-4">
+    <input type="date" class="form-control d-inline-block w-auto" value="@DateTime.Now.ToString("yyyy-MM-dd")">
+</div>
+
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-bordered mb-0 text-center align-middle" style="border-color: #FFE4D3;">
+        <thead style="background-color: #FFA000; color: white;">
+            <tr>
+                <th style="width: 80px;"></th>
+                <th>Понеділок</th>
+                <th>Вівторок</th>
+                <th>Середа</th>
+                <th>Четвер</th>
+                <th>П'ятниця</th>
+                <th>Субота</th>
+                <th>Неділя</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int h = 0; h <= 11; h++) {
+                <tr>
+                    <td class="bg-light fw-bold text-muted">@(h.ToString("D2")):00</td>
+                    @for (int d = 1; d <= 7; d++) {
+                        <td style="height: 50px; background-color: #FFF9F5;">
+                            @{
+                                var lesson = Model?.FirstOrDefault(l => l.ScheduledAt.Hour == h && (int)l.ScheduledAt.DayOfWeek == (d % 7));
+                                if (lesson != null) {
+                                    <div class="p-2 rounded shadow-sm text-white" style="background-color: #D00000; font-size: 0.85rem;">
+                                        Олексій Т.
+                                    </div>
+                                }
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

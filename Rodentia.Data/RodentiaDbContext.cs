@@ -10,6 +10,7 @@ public class RodentiaDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gui
     public RodentiaDbContext(DbContextOptions<RodentiaDbContext> options)
         : base(options)
     {
+        
     }
 
 
@@ -33,13 +34,17 @@ public class RodentiaDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gui
         modelBuilder.Entity<MaterialLink>().ToTable("material_links");
 
         modelBuilder.Entity<Lesson>()
-            .HasOne(l => l.Teacher)
+            .Property(l => l.Price)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Lesson>()
+            .HasOne<User>() 
             .WithMany()
             .HasForeignKey(l => l.TeacherId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Lesson>()
-            .HasOne(l => l.Student)
+            .HasOne<User>()
             .WithMany()
             .HasForeignKey(l => l.StudentId)
             .OnDelete(DeleteBehavior.Restrict);
@@ -49,5 +54,5 @@ public class RodentiaDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gui
         modelBuilder.Entity<TeacherStudentLink>()
             .HasOne<User>().WithMany().HasForeignKey(l => l.StudentId).OnDelete(DeleteBehavior.Restrict);
     }
-
+    
 }
