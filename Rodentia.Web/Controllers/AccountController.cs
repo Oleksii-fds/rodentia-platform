@@ -29,7 +29,7 @@ public class AccountController : Controller
 
         var result = await _authService.RegisterAsync(model);
 
-        if (result.Success)
+        if (result.IsSuccess)
         {
             _logger.LogInformation("Користувач {Email} успішно зареєстрований.", model.Email);
             return RedirectToAction("Index", "Home");
@@ -51,7 +51,7 @@ public class AccountController : Controller
 
         var result = await _authService.LoginAsync(model);
 
-        if (result.Success)
+        if (result.IsSuccess)
         {
             _logger.LogInformation("Користувач {Email} увійшов у систему.", model.Email);
             return RedirectToAction("Index", "Home");
@@ -69,7 +69,7 @@ public class AccountController : Controller
     {
         var result = await _authService.SignOutAsync();
 
-        if (result.Success)
+        if (result.IsSuccess)
         {
             _logger.LogInformation("Користувач вийшов із системи.");
             return RedirectToAction("Login", "Account");

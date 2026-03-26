@@ -1,21 +1,27 @@
 #nullable enable
 namespace Rodentia.Core.Models;
 
-public class Result<T>
-{
-    public bool Success { get; set; }
-    public T? Data { get; set; }
-    public string? ErrorMessage { get; set; }
-
-    public static Result<T> SuccessData(T data) => new() { Success = true, Data = data };
-    public static Result<T> Failure(string message) => new() { Success = false, ErrorMessage = message };
-}
-
+// 1. Базовий клас для результатів без даних (наприклад, Logout)
 public class Result
 {
-    public bool Success { get; set; }
+    // Властивість називаємо IsSuccess, щоб не було конфлікту з методами
+    public bool IsSuccess { get; set; }
     public string? ErrorMessage { get; set; }
 
-    public static Result Ok() => new() { Success = true };
-    public static Result Failure(string message) => new() { Success = false, ErrorMessage = message };
+    // Метод називаємо Ok, щоб AuthService його бачив
+    public static Result Ok() => new() { IsSuccess = true };
+    
+    public static Result Failure(string message) => new() { IsSuccess = false, ErrorMessage = message };
+}
+
+// 2. Генеричний клас для результатів з даними (наприклад, Register або GetSchedule)
+public class Result<T> : Result
+{
+    public T? Data { get; set; }
+
+    // Використовуємо SuccessData для чіткості
+    public static Result<T> SuccessData(T data) => new() { IsSuccess = true, Data = data };
+
+    // 'new' каже компілятору, що ми знаємо про метод у батьківському класі
+    public static new Result<T> Failure(string message) => new() { IsSuccess = false, ErrorMessage = message };
 }

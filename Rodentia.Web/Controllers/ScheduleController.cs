@@ -20,7 +20,7 @@ public class ScheduleController(ILessonService lessonService) : Controller
 
         var result = await lessonService.GetScheduleAsync(userId);
 
-        if (!result.Success)
+        if (!result.IsSuccess)
         {
             return View("Error", result.ErrorMessage);
         }

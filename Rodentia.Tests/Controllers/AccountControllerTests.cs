@@ -6,8 +6,9 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
-using Rodentia.Core.Models;
+using Rodentia.Core.Models; 
 using Rodentia.Web.Controllers;
+using Rodentia.Web.Models; 
 using Xunit;
 
 namespace Rodentia.Tests.Controllers;
@@ -27,36 +28,21 @@ public class AccountControllerTests
 
         var userStore = new Mock<IUserStore<User>>();
         _userManager = new Mock<UserManager<User>>(
-            userStore.Object,
-            null!,
-            null!,
-            null!,
-            null!,
-            null!,
-            null!,
-            null!,
-            null!);
+            userStore.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
         _signInManager = new Mock<SignInManager<User>>(
             _userManager.Object,
             new Mock<IHttpContextAccessor>().Object,
             new Mock<IUserClaimsPrincipalFactory<User>>().Object,
-            null!,
-            null!,
-            null!,
-            null!);
+            null!, null!, null!, null!);
 
-        _controller = new AccountController(
-            _authService.Object,
-
-            _logger.Object);
+        _controller = new AccountController(_authService.Object, _logger.Object);
     }
 
     [Fact]
     public void Register_ReturnsViewResult()
     {
         var result = _controller.Register();
-
         Assert.IsType<ViewResult>(result);
     }
 
@@ -74,15 +60,11 @@ public class AccountControllerTests
 
         _authService
             .Setup(x => x.RegisterAsync(It.IsAny<RegisterViewModel>()))
-            .ReturnsAsync(IdentityResult.Success);
+            .ReturnsAsync(Result<IdentityResult>.SuccessData(IdentityResult.Success));
 
         _userManager
             .Setup(x => x.FindByEmailAsync(model.Email))
-            .ReturnsAsync(new User
-            {
-                Email = model.Email,
-                UserName = model.Email
-            });
+            .ReturnsAsync(new User { Email = model.Email, UserName = model.Email });
 
         _signInManager
             .Setup(x => x.SignInAsync(It.IsAny<User>(), false, null))
@@ -110,12 +92,7 @@ public class AccountControllerTests
     [Fact]
     public async Task Register_Post_ValidModel_AutoSignsInUser()
     {
-        var user = new User
-        {
-            Email = "maria@test.com",
-            UserName = "maria@test.com"
-        };
-
+        var user = new User { Email = "maria@test.com", UserName = "maria@test.com" };
         var model = new RegisterViewModel
         {
             FullName = "Марія Манько",
@@ -127,39 +104,32 @@ public class AccountControllerTests
 
         _authService
             .Setup(x => x.RegisterAsync(It.IsAny<RegisterViewModel>()))
-            .ReturnsAsync(IdentityResult.Success);
+            .ReturnsAsync(Result<IdentityResult>.SuccessData(IdentityResult.Success));
 
-        _userManager
-            .Setup(x => x.FindByEmailAsync(model.Email))
-            .ReturnsAsync(user);
-
-        _signInManager
-            .Setup(x => x.SignInAsync(It.IsAny<User>(), false, null))
-            .Returns(Task.CompletedTask);
+        _userManager.Setup(x => x.FindByEmailAsync(model.Email)).ReturnsAsync(user);
+        _signInManager.Setup(x => x.SignInAsync(It.IsAny<User>(), false, null)).Returns(Task.CompletedTask);
 
         await _controller.Register(model);
 
-    _authService.Verify(x => x.RegisterAsync(It.IsAny<RegisterViewModel>()), Times.Once());   
+        _authService.Verify(x => x.RegisterAsync(It.IsAny<RegisterViewModel>()), Times.Once());   
     }
 
     [Fact]
     public async Task Logout_ReturnsRedirectToRegister()
     {
-        _signInManager
-            .Setup(x => x.SignOutAsync())
-            .Returns(Task.CompletedTask);
+        _authService.Setup(x => x.SignOutAsync()).ReturnsAsync(Result.Ok());
 
         var result = await _controller.Logout();
 
         var redirectResult = Assert.IsType<RedirectToActionResult>(result);
-        Assert.Equal("Register", redirectResult.ActionName);
+        Assert.Equal("Login", redirectResult.ActionName);
         Assert.Equal("Account", redirectResult.ControllerName);
     }
 
     [Fact]
     public async Task Logout_CallsSignOutAsync_Once()
     {
-        _authService.Setup(x => x.SignOutAsync()).Returns(Task.CompletedTask);
+        _authService.Setup(x => x.SignOutAsync()).ReturnsAsync(Result.Ok());
 
         await _controller.Logout();
 
