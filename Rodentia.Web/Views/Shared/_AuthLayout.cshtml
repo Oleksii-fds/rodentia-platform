@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rodentia - @ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body { 
+            background-color: #ffffff; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .auth-wrapper {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .auth-nav { 
+            display: inline-flex; 
+            gap: 30px; 
+            margin-bottom: 20px;
+        }
+
+        .auth-nav a { 
+            text-decoration: none; 
+            color: #D1D1D1; 
+            font-weight: 700; 
+            font-size: 1.2rem;
+            transition: 0.3s;
+            padding-bottom: 5px;
+            border-bottom: 3px solid transparent;
+        }
+
+        .auth-nav a.active { 
+            color: #FF6B00; 
+            border-bottom-color: #FF6B00; 
+        }
+
+        .auth-card {
+            background: #F9FAFB;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid #f0f0f0;
+        }
+
+        .logo-text {
+            color: #FF6B00;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .sub-text {
+            color: #888;
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-nav">
+            <a href="/Account/Login" class="@(ViewData["Title"]?.ToString() == "Вхід" ? "active" : "")">Вхід</a>
+            <a href="/Account/Register" class="@(ViewData["Title"]?.ToString() == "Реєстрація" ? "active" : "")">Реєстрація</a>
+        </div>
+
+        <div class="auth-card">
+            <div class="logo-text">Rodentia</div>
+            <div class="sub-text">Увійти в акаунт</div>
+            
+            @RenderBody()
+        </div>
+    </div>
+</body>
+</html>
