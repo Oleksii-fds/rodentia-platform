@@ -24,8 +24,7 @@ public class AuthService : IAuthService
 
     public async Task<IdentityResult> RegisterAsync(RegisterViewModel model)
 {
-    try 
-    {
+
         var fullNameParts = model.FullName.Trim().Split(' ');
         string firstName = fullNameParts.FirstOrDefault() ?? "";
         string lastName = fullNameParts.Length > 1 ? fullNameParts[1] : "";
@@ -48,18 +47,12 @@ public class AuthService : IAuthService
         }
         
         return result;
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Помилка під час реєстрації користувача {Email}", model.Email);
-        throw; 
-    }
+
 }
 
     public async Task<SignInResult> LoginAsync(LoginViewModel model)
 {
-    try
-    {
+    
         var result = await _signInManager.PasswordSignInAsync(
             model.Email, 
             model.Password, 
@@ -76,27 +69,16 @@ public class AuthService : IAuthService
         }
 
         return result;
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Критична помилка під час входу користувача {Email}", model.Email);
-        throw; 
-    }
+    
 }
 
     
 
     public async Task SignOutAsync()
     {
-        try
-        {
             await _signInManager.SignOutAsync();
             _logger.LogInformation("Користувач вийшов із системи.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Помилка під час спроби виходу користувача.");
-        }
+            
     }
 
 }
