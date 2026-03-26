@@ -22,9 +22,8 @@ public class AuthService : IAuthService
         _logger = logger;
     }
 
-    public async Task<IdentityResult> RegisterAsync(RegisterViewModel model)
-{
-
+    public async Task<Result<IdentityResult>> RegisterAsync(RegisterViewModel model)
+    {
         var fullNameParts = model.FullName.Trim().Split(' ');
         string firstName = fullNameParts.FirstOrDefault() ?? "";
         string lastName = fullNameParts.Length > 1 ? fullNameParts[1] : "";
@@ -44,15 +43,15 @@ public class AuthService : IAuthService
         {
             await _signInManager.SignInAsync(user, isPersistent: false);
             _logger.LogInformation("Користувач {Email} успішно зареєстрований.", user.Email);
+            return Result<IdentityResult>.Ok(result); 
         }
-        
-        return result;
 
-}
+        var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
+        return Result<IdentityResult>.Failure(errorMessages);
+    }
 
-    public async Task<SignInResult> LoginAsync(LoginViewModel model)
-{
-    
+    public async Task<Result<SignInResult>> LoginAsync(LoginViewModel model)
+    {
         var result = await _signInManager.PasswordSignInAsync(
             model.Email, 
             model.Password, 
@@ -62,23 +61,24 @@ public class AuthService : IAuthService
         if (result.Succeeded)
         {
             _logger.LogInformation("Користувач {Email} успішно увійшов.", model.Email);
+            return Result<SignInResult>.Ok(result);
         }
-        else if (result.IsLockedOut)
+        
+        if (result.IsLockedOut)
         {
             _logger.LogWarning("Акаунт користувача {Email} заблоковано.", model.Email);
+            return Result<SignInResult>.Failure("Акаунт заблоковано. Спробуйте пізніше.");
         }
 
-        return result;
-    
-}
+        return Result<SignInResult>.Failure("Невірний логін або пароль.");
+    }
 
-    
-
-    public async Task SignOutAsync()
+    public async Task<Result> SignOutAsync()
     {
-            await _signInManager.SignOutAsync();
-            _logger.LogInformation("Користувач вийшов із системи.");
-            
+        await _signInManager.SignOutAsync();
+        _logger.LogInformation("Користувач вийшов із системи.");
+        
+        return Result.Ok(); 
     }
 
 }

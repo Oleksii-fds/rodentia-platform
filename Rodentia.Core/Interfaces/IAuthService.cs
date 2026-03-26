@@ -5,7 +5,7 @@ namespace Rodentia.Core.Interfaces;
 
 public interface IAuthService
 {
-    Task<IdentityResult> RegisterAsync(RegisterViewModel model);
-    Task<SignInResult> LoginAsync(LoginViewModel model); 
-    Task SignOutAsync(); 
+    Task<Result<IdentityResult>> RegisterAsync(RegisterViewModel model);
+    Task<Result<SignInResult>> LoginAsync(LoginViewModel model);
+    Task<Result> SignOutAsync();
 }

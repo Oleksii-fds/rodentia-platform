@@ -8,13 +8,13 @@ namespace Rodentia.Web.Controllers;
 public class AccountController : Controller
 {
     private readonly IAuthService _authService;
-
+    
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(IAuthService authService, ILogger<AccountController> logger)
     {
         _authService = authService;
-        
+
         _logger = logger;
     }
 
@@ -29,16 +29,13 @@ public class AccountController : Controller
 
         var result = await _authService.RegisterAsync(model);
 
-        if (result.Succeeded)
+        if (result.Success)
         {
-            _logger.LogInformation("Користувач {Email} успішно зареєстрований через сервіс.", model.Email);
+            _logger.LogInformation("Користувач {Email} успішно зареєстрований.", model.Email);
             return RedirectToAction("Index", "Home");
         }
 
-        foreach (var error in result.Errors)
-        {
-            ModelState.AddModelError(string.Empty, error.Description);
-        }
+        ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Помилка реєстрації");
 
         return View(model);
     }
@@ -54,13 +51,14 @@ public class AccountController : Controller
 
         var result = await _authService.LoginAsync(model);
 
-        if (result.Succeeded)
+        if (result.Success)
         {
             _logger.LogInformation("Користувач {Email} увійшов у систему.", model.Email);
             return RedirectToAction("Index", "Home");
         }
 
-        ModelState.AddModelError(string.Empty, "Невірний логін або пароль.");
+        ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Невірний логін або пароль.");
+        
         return View(model);
     }
 
@@ -69,8 +67,14 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
-        await _authService.SignOutAsync();
-        _logger.LogInformation("Користувач вийшов із системи через сервіс.");
-        return RedirectToAction("Register", "Account");
+        var result = await _authService.SignOutAsync();
+
+        if (result.Success)
+        {
+            _logger.LogInformation("Користувач вийшов із системи.");
+            return RedirectToAction("Login", "Account");
+        }
+
+        return RedirectToAction("Index", "Home");
     }
 }
