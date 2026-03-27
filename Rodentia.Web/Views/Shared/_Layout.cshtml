@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rodentia - @ViewData["Title"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/profile-modal.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root { --rodentia-orange: #FF6B00; --rodentia-light: #FFF8F4; }
@@ -34,21 +35,23 @@
                 </div>
                 <div class="bg-secondary rounded-circle" style="width: 40px; height: 40px;"></div>
             </div>
-            <button class="btn btn-warning text-white me-2">Профіль</button>
+            <button type="button" id="open-profile-modal" class="btn btn-warning">
+                Профіль
+            </button>
             <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn btn-light border">Вихід</button>
             </form>
         </header>
-
+        <div
+            id="profile-modal-root">
+        </div>
         <main role="main">
             @RenderBody()
         </main>
     </div>
-
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="~/js/profile-modal.js" asp-append-version="true"></script>
 </body>
 </html>

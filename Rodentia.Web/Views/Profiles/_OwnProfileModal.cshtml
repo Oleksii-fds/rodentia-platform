@@ -1,0 +1,77 @@
+﻿@model Rodentia.Web.Models.Profiles.OwnProfileModalViewModel
+
+<div class="profile-modal-overlay" id="profile-modal-overlay">
+    <div class="profile-modal-window" role="dialog" aria-modal="true">
+        <div class="profile-modal-header">
+            <span>Налаштування профілю</span>
+            <button type="button" class="profile-modal-close" data-profile-close>&times;</button>
+        </div>
+
+        <form id="own-profile-form"
+              asp-controller="Profiles"
+              asp-action="UpdateOwnProfile"
+              method="post"
+              autocomplete="off">
+            @Html.AntiForgeryToken()
+
+            <div class="profile-modal-body">
+                <div class="profile-modal-left">
+                    <div class="profile-avatar-placeholder"></div>
+
+                    <a href="#" class="profile-photo-link" onclick="return false;">Змінити фото</a>
+
+                    <div class="profile-user-label">
+                        @Model.FirstName (@Model.RoleLabel)
+                    </div>
+
+                    @if (Model.ShowStudentCode)
+                    {
+                        <div class="profile-student-code-title">Код учня</div>
+                        <div class="profile-student-code-value">@Model.StudentCode</div>
+                    }
+                </div>
+
+                <div class="profile-modal-right">
+                    <div class="profile-form-errors" id="profile-form-errors"></div>
+
+                    <div class="mb-2">
+                        <label asp-for="FirstName" class="form-label"></label>
+                        <input asp-for="FirstName" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label asp-for="LastName" class="form-label"></label>
+                        <input asp-for="LastName" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label"></label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                    </div>
+
+                    <div class="profile-password-box">
+                        <div class="mb-2">
+                            <label asp-for="CurrentPassword" class="form-label"></label>
+                            <input asp-for="CurrentPassword" class="form-control" autocomplete="off" />
+                        </div>
+
+                        <div>
+                            <label asp-for="NewPassword" class="form-label"></label>
+                            <input asp-for="NewPassword" class="form-control" autocomplete="new-password" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-modal-footer">
+                <button type="submit" class="btn btn-success">Зберегти зміни</button>
+                <button type="button" class="btn btn-secondary" data-profile-close>Скасувати</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,116 @@
+﻿.profile-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 24px;
+}
+
+.profile-modal-window {
+    width: 100%;
+    max-width: 900px;
+    background: #f3f3f3;
+    border: 1px solid #d9d9d9;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.profile-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: #f4b667;
+    border-bottom: 1px solid #e8a142;
+    font-weight: 600;
+}
+
+.profile-modal-close {
+    border: 0;
+    background: transparent;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.profile-modal-body {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 24px;
+    padding: 20px;
+    background: #f5efe4;
+}
+
+.profile-modal-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.profile-avatar-placeholder {
+    width: 92px;
+    height: 92px;
+    border: 1px solid #999;
+    background: linear-gradient(45deg, transparent calc(50% - 1px), #999, transparent calc(50% + 1px)), linear-gradient(-45deg, transparent calc(50% - 1px), #999, transparent calc(50% + 1px));
+    background-color: #fff;
+    margin-bottom: 10px;
+}
+
+.profile-photo-link {
+    font-size: 13px;
+    text-decoration: none;
+    margin-bottom: 10px;
+}
+
+.profile-user-label {
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 14px;
+}
+
+.profile-student-code-title {
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.profile-student-code-value {
+    padding: 6px 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.profile-password-box {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.profile-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 18px;
+    border-top: 1px solid #e8a142;
+    background: #f5efe4;
+}
+
+.profile-form-errors {
+    display: none;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+}
+
+    .profile-form-errors.is-visible {
+        display: block;
+    }
