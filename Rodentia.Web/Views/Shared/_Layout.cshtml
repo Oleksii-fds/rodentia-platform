@@ -21,8 +21,20 @@
     <div class="sidebar">
         <div class="logo-text">Rodentia</div>
         <nav class="nav flex-column">
-            <a class="nav-link active-orange" asp-controller="Schedule" asp-action="Index">Розклад</a>
-            <a class="nav-link" href="#">Історія занять</a>
+            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Schedule" ? "active-orange" : "")" 
+            asp-controller="Schedule" asp-action="Index">
+                <i class="bi bi-calendar3 me-2"></i> Розклад
+            </a>
+
+            @if (User.IsInRole("Teacher"))
+            {
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Teacher" ? "active-orange" : "")" 
+                asp-controller="Teacher" asp-action="MyStudents">
+                    <i class="bi bi-people me-2"></i> Мої учні
+                </a>
+            }
+
+            <a class="nav-link" href="#"><i class="bi bi-clock-history me-2"></i> Історія занять</a>
         </nav>
     </div>
 
@@ -30,27 +42,34 @@
         <header class="d-flex justify-content-end align-items-center mb-4 p-2">
             <div class="d-flex align-items-center me-3 text-end">
                 <div class="me-2">
-                    <div class="fw-bold">@User.Identity?.Name (Учень)</div>
-                    <small class="text-muted">@User.Identity?.Name@@gmail.com</small>
+                    <div class="fw-bold">
+                    @User.Identity?.Name 
+                    (@(User.IsInRole("Teacher") ? "Викладач" : "Учень"))
                 </div>
-                <div class="bg-secondary rounded-circle" style="width: 40px; height: 40px;"></div>
+                    <small class="text-muted">@User.Identity?.Name</small>
+                </div>
+                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 40px; height: 40px;">
+                    @(User.Identity?.Name?[0].ToString().ToUpper() ?? "?")
+                </div>
+
             </div>
-            <button type="button" id="open-profile-modal" class="btn btn-warning">
+            
+            <button type="button" id="open-profile-modal" class="btn btn-warning me-2">
                 Профіль
             </button>
+            
             <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn btn-light border">Вихід</button>
             </form>
         </header>
-        <div
-            id="profile-modal-root">
-        </div>
+
+        <div id="profile-modal-root"></div>
+
         <main role="main">
             @RenderBody()
         </main>
-    </div>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    </div> <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/profile-modal.js" asp-append-version="true"></script>
 </body>

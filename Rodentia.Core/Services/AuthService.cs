@@ -23,31 +23,34 @@ public class AuthService : IAuthService
     }
 
     public async Task<Result<IdentityResult>> RegisterAsync(RegisterViewModel model)
+{
+    var fullNameParts = model.FullName.Trim().Split(' ');
+    string firstName = fullNameParts.FirstOrDefault() ?? "";
+    string lastName = fullNameParts.Length > 1 ? fullNameParts[1] : "";
+
+    var user = new User
     {
-        var fullNameParts = model.FullName.Trim().Split(' ');
-        string firstName = fullNameParts.FirstOrDefault() ?? "";
-        string lastName = fullNameParts.Length > 1 ? fullNameParts[1] : "";
+        UserName = model.Email,
+        Email = model.Email,
+        FirstName = firstName,
+        LastName = lastName,
+        Role = model.Role,
+        UniqueCode = "ROD-" + Guid.NewGuid().ToString().Substring(0, 5).ToUpper()
+    };
 
-        var user = new User
-        {
-            UserName = model.Email,
-            Email = model.Email,
-            FirstName = firstName,
-            LastName = lastName,
-            Role = model.Role,
-        };
+    var result = await _userManager.CreateAsync(user, model.Password);
+    
+    if (result.Succeeded)
+    {
+        await _userManager.AddToRoleAsync(user, model.Role.ToString());
 
-        var result = await _userManager.CreateAsync(user, model.Password);
-        
-        if (result.Succeeded)
-        {
-            await _signInManager.SignInAsync(user, isPersistent: false);
-            _logger.LogInformation("Користувач {Email} успішно зареєстрований.", user.Email);
-            return Result<IdentityResult>.SuccessData(result); 
-        }
+        await _signInManager.SignInAsync(user, isPersistent: false);
+        _logger.LogInformation("Користувач {Email} зареєстрований як {Role}.", user.Email, model.Role);
+        return Result<IdentityResult>.SuccessData(result); 
+    }
 
-        var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
-        return Result<IdentityResult>.Failure(errorMessages);
+    var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
+    return Result<IdentityResult>.Failure(errorMessages);
     }
 
     public async Task<Result<SignInResult>> LoginAsync(LoginViewModel model)

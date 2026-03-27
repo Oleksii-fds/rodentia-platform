@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.ComponentModel.DataAnnotations;
 
 using Microsoft.AspNetCore.Identity;
@@ -11,6 +13,8 @@ public class User : IdentityUser<Guid>
     public string LastName { get; set; } = null!;
 
     public UserRole Role { get; set; }
+
+    public string? UniqueCode { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
