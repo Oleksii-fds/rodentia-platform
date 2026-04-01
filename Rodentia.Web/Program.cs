@@ -21,9 +21,11 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-
+if (builder.Environment.EnvironmentName != "Testing")
+{
 builder.Services.AddDbContext<RodentiaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+}
 
 
 
@@ -49,16 +51,18 @@ builder.Services.AddControllersWithViews();
 
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Testing"))
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-    var roles = new[] { "Teacher", "Student" };
-    foreach (var role in roles)
+    using (var scope = app.Services.CreateScope())
     {
-        if (!await roleManager.RoleExistsAsync(role))
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        var roles = new[] { "Teacher", "Student" };
+        foreach (var role in roles)
         {
-            await roleManager.CreateAsync(new IdentityRole<Guid>(role));
+            if (!await roleManager.RoleExistsAsync(role))
+            {
+                await roleManager.CreateAsync(new IdentityRole<Guid>(role));
+            }
         }
     }
 }
@@ -105,3 +109,4 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+public partial class Program { }

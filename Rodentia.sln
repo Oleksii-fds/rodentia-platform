@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rodentia.Data", "Rodentia.D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rodentia.Tests", "Rodentia.Tests\Rodentia.Tests.csproj", "{1BBC5B5D-8CC7-4C8E-A563-AC213144DD5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rodentia.IntegrationTests", "Rodentia.IntegrationTests\Rodentia.IntegrationTests.csproj", "{7E82AC3E-3DFD-4AFD-A801-098994A55E14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{1BBC5B5D-8CC7-4C8E-A563-AC213144DD5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1BBC5B5D-8CC7-4C8E-A563-AC213144DD5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1BBC5B5D-8CC7-4C8E-A563-AC213144DD5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E82AC3E-3DFD-4AFD-A801-098994A55E14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E82AC3E-3DFD-4AFD-A801-098994A55E14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E82AC3E-3DFD-4AFD-A801-098994A55E14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E82AC3E-3DFD-4AFD-A801-098994A55E14}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

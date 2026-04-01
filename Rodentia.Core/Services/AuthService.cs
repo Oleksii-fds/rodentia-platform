@@ -46,7 +46,8 @@ public class AuthService : IAuthService
 
         await _signInManager.SignInAsync(user, isPersistent: false);
         _logger.LogInformation("Користувач {Email} зареєстрований як {Role}.", user.Email, model.Role);
-        return Result<IdentityResult>.SuccessData(result); 
+        
+        return result; 
     }
 
     var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
@@ -64,7 +65,7 @@ public class AuthService : IAuthService
         if (result.Succeeded)
         {
             _logger.LogInformation("Користувач {Email} успішно увійшов.", model.Email);
-            return Result<SignInResult>.SuccessData(result);
+            return result;
         }
         
         if (result.IsLockedOut)

@@ -48,7 +48,7 @@ public sealed class ProfileService : IProfileService
                 : null
         };
 
-        return Result<OwnProfileDto>.SuccessData(dto);
+        return dto;
     }
 
     public async Task<Result> UpdateOwnProfileAsync(

@@ -12,6 +12,8 @@ public class Result
     public static Result Ok() => new() { IsSuccess = true };
     
     public static Result Failure(string message) => new() { IsSuccess = false, ErrorMessage = message };
+
+    public static implicit operator Result(bool isSuccess) => new() { IsSuccess = isSuccess };
 }
 
 
@@ -24,4 +26,6 @@ public class Result<T> : Result
 
 
     public static new Result<T> Failure(string message) => new() { IsSuccess = false, ErrorMessage = message };
+
+    public static implicit operator Result<T>(T data) => SuccessData(data);
 }
