@@ -8,17 +8,13 @@ using System.Security.Claims;
 namespace Rodentia.Web.Controllers;
 
 [Authorize] 
-public class ScheduleController(ILessonService lessonService) : Controller
+public class ScheduleController(ILessonService lessonService) : BaseController
 {
     public async Task<IActionResult> Index()
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(userIdString, out var userId))
-        {
-            return RedirectToAction("Login", "Account");
-        }
+        
 
-        var result = await lessonService.GetScheduleAsync(userId);
+        var result = await lessonService.GetScheduleAsync(CurrentUserId);
 
         if (!result.IsSuccess)
         {

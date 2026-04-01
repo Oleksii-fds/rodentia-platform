@@ -4,11 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Rodentia.Core.Interfaces;
 using Rodentia.Core.Models.Profiles;
 using Rodentia.Web.Models.Profiles;
+using Rodentia.Web.Filters;
 
 namespace Rodentia.Web.Controllers;
 
 [Authorize]
-public sealed class ProfilesController : Controller
+public sealed class ProfilesController : BaseController
 {
     private readonly IProfileService _profileService;
 
@@ -21,7 +22,7 @@ public sealed class ProfilesController : Controller
     public async Task<IActionResult> OwnModal(CancellationToken cancellationToken)
     {
         var result = await _profileService.GetOwnProfileAsync(
-            GetCurrentUserId(),
+            CurrentUserId,
             cancellationToken);
 
         if (!result.IsSuccess || result.Data is null)
@@ -43,19 +44,13 @@ public sealed class ProfilesController : Controller
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    [ValidateModelState]
+
     public async Task<IActionResult> UpdateOwnProfile(
         OwnProfileModalViewModel model,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(new
-            {
-                message = "Перевір поля форми.",
-                errors = GetModelErrors()
-            });
-        }
+        
 
         var request = new UpdateOwnProfileRequest
         {
@@ -68,7 +63,7 @@ public sealed class ProfilesController : Controller
         };
 
         var result = await _profileService.UpdateOwnProfileAsync(
-            GetCurrentUserId(),
+            CurrentUserId,
             request,
             cancellationToken);
 
@@ -86,23 +81,5 @@ public sealed class ProfilesController : Controller
         });
     }
 
-    private Guid GetCurrentUserId()
-    {
-        var rawUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (!Guid.TryParse(rawUserId, out var userId))
-        {
-            throw new InvalidOperationException("Не вдалося визначити ID поточного користувача.");
-        }
-
-        return userId;
-    }
-
-    private IEnumerable<string> GetModelErrors()
-    {
-        return ModelState.Values
-            .SelectMany(x => x.Errors)
-            .Select(x => x.ErrorMessage)
-            .Where(x => !string.IsNullOrWhiteSpace(x));
-    }
 }

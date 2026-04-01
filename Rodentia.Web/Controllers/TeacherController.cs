@@ -6,7 +6,7 @@ using System.Security.Claims;
 namespace Rodentia.Web.Controllers;
 
 [Authorize(Roles = "Teacher")]
-public class TeacherController : Controller
+public class TeacherController : BaseController
 {
     private readonly ITeacherService _teacherService;
 
@@ -15,7 +15,7 @@ public class TeacherController : Controller
         _teacherService = teacherService;
     }
 
-    private Guid CurrentUserId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
 
     [HttpGet]
     public async Task<IActionResult> MyStudents()
@@ -25,7 +25,7 @@ public class TeacherController : Controller
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+
     public async Task<IActionResult> AddStudent(string identifier)
     {
         if (string.IsNullOrWhiteSpace(identifier))
@@ -42,7 +42,7 @@ public class TeacherController : Controller
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+
     public async Task<IActionResult> RemoveStudent(Guid studentId)
     {
         await _teacherService.RemoveStudentAsync(CurrentUserId, studentId);

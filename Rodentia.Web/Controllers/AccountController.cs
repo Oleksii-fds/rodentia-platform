@@ -2,27 +2,29 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rodentia.Core.Interfaces;
 using Rodentia.Core.Models;
+using Rodentia.Web.Filters;
 
 namespace Rodentia.Web.Controllers;
 
-public class AccountController : Controller
+public class AccountController : BaseController
 {
     private readonly IAuthService _authService;
     
-    private readonly ILogger<AccountController> _logger;
 
-    public AccountController(IAuthService authService, ILogger<AccountController> logger)
+
+    public AccountController(IAuthService authService)
     {
         _authService = authService;
 
-        _logger = logger;
+
     }
 
     [HttpGet]
     public IActionResult Register() => View();
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    [ValidateModelState]
+
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
@@ -31,7 +33,7 @@ public class AccountController : Controller
 
         if (result.IsSuccess)
         {
-            _logger.LogInformation("Користувач {Email} успішно зареєстрований.", model.Email);
+            Logger.LogInformation("Користувач {Email} успішно зареєстрований.", model.Email);
             return RedirectToAction("Index", "Home");
         }
 
@@ -44,7 +46,8 @@ public class AccountController : Controller
     public IActionResult Login() => View();
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    [ValidateModelState]
+
     public async Task<IActionResult> Login(LoginViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
@@ -53,7 +56,7 @@ public class AccountController : Controller
 
         if (result.IsSuccess)
         {
-            _logger.LogInformation("Користувач {Email} увійшов у систему.", model.Email);
+            Logger.LogInformation("Користувач {Email} увійшов у систему.", model.Email);
             return RedirectToAction("Index", "Home");
         }
 
@@ -64,14 +67,14 @@ public class AccountController : Controller
 
     [HttpPost]
     [Authorize]
-    [ValidateAntiForgeryToken]
+
     public async Task<IActionResult> Logout()
     {
         var result = await _authService.SignOutAsync();
 
         if (result.IsSuccess)
         {
-            _logger.LogInformation("Користувач вийшов із системи.");
+            Logger.LogInformation("Користувач вийшов із системи.");
             return RedirectToAction("Login", "Account");
         }
 
