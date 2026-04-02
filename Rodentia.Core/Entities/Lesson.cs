@@ -1,6 +1,8 @@
 #nullable enable
 
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Rodentia.Core.Entities;
 
 public class Lesson
@@ -27,6 +29,9 @@ public class Lesson
     public string? Notes { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [NotMapped]
+    public string DisplayName { get; set; } = string.Empty;
 }
 
 public enum LessonStatus

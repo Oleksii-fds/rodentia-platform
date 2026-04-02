@@ -6,7 +6,9 @@
 <div class="mb-4">
     <input type="date" class="form-control d-inline-block w-auto" value="@DateTime.Now.ToString("yyyy-MM-dd")">
 </div>
-
+<button type="button" id="open-create-lesson-modal" class="btn btn-warning">
+                Створити заняття
+            </button>
 <div class="table-responsive shadow-sm rounded">
     <table class="table table-bordered mb-0 text-center align-middle" style="border-color: #FFE4D3;">
         <thead style="background-color: #FFA000; color: white;">
@@ -21,6 +23,7 @@
                 <th>Неділя</th>
             </tr>
         </thead>
+
         <tbody>
             @for (int h = 0; h <= 11; h++) {
                 <tr>
@@ -31,7 +34,7 @@
                                 var lesson = Model?.FirstOrDefault(l => l.ScheduledAt.Hour == h && (int)l.ScheduledAt.DayOfWeek == (d % 7));
                                 if (lesson != null) {
                                     <div class="p-2 rounded shadow-sm text-white" style="background-color: #D00000; font-size: 0.85rem;">
-                                        Олексій Т.
+                                        @lesson.DisplayName
                                     </div>
                                 }
                             }
@@ -42,3 +45,7 @@
         </tbody>
     </table>
 </div>
+<div id="create-lesson-modal-root"></div>
+
+<link rel="stylesheet" href="~/css/schedule-create-lesson.css" asp-append-version="true" />
+<script src="~/js/schedule-create-lesson.js" asp-append-version="true"></script>

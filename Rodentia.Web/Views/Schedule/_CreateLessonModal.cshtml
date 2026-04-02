@@ -1,0 +1,78 @@
+﻿@using Rodentia.Core.Entities
+@model Rodentia.Web.Models.Lessons.CreateLessonModalViewModel
+
+<div class="lesson-modal-overlay" id="lesson-modal-overlay">
+    <div class="lesson-modal-window" role="dialog" aria-modal="true">
+        <div class="lesson-modal-header">
+            <span>Планувати заняття</span>
+            <button type="button" class="lesson-modal-close" data-lesson-close>&times;</button>
+        </div>
+
+        <form id="create-lesson-form"
+              asp-controller="Schedule"
+              asp-action="CreateLesson"
+              method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="lesson-modal-body">
+                <div class="lesson-form-errors" id="lesson-form-errors"></div>
+
+                <div class="mb-3">
+                    <label asp-for="StudentId" class="form-label"></label>
+                    <select asp-for="StudentId" asp-items="Model.StudentOptions" class="form-select">
+                        <option value="">Оберіть учня</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="LessonDate" class="form-label"></label>
+                        <input asp-for="LessonDate" type="date" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="StartTime" class="form-label"></label>
+                        <input asp-for="StartTime" type="time" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="DurationMinutes" class="form-label"></label>
+                        <input asp-for="DurationMinutes" type="number" min="1" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Subject" class="form-label"></label>
+                    <input asp-for="Subject" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Topic" class="form-label"></label>
+                    <input asp-for="Topic" class="form-control" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Price" class="form-label"></label>
+                        <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Status" class="form-label"></label>
+                        <select asp-for="Status" asp-items="Html.GetEnumSelectList<LessonStatus>()" class="form-select"></select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Notes" class="form-label"></label>
+                    <textarea asp-for="Notes" class="form-control" rows="4"></textarea>
+                </div>
+            </div>
+
+            <div class="lesson-modal-footer">
+                <button type="submit" class="btn btn-success">Зберегти</button>
+                <button type="button" class="btn btn-secondary" data-lesson-close>Скасувати</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Rodentia.Core.Models.Profiles;
+
 namespace Rodentia.Core.Interfaces;
 
 public interface IProfileService
