@@ -11,8 +11,16 @@ namespace Rodentia.Web.Controllers;
 public class ScheduleController(ILessonService lessonService) : BaseController
 {
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(DateTime? date)
     {
+        var referenceDate = date ?? DateTime.Today;
+        
+        int diff = (7 + (referenceDate.DayOfWeek - DayOfWeek.Monday)) % 7;
+        var startOfWeek = referenceDate.AddDays(-1 * diff).Date;
+
+        ViewBag.StartOfWeek = startOfWeek;
+        ViewBag.SelectedDate = referenceDate.ToString("yyyy-MM-dd");
+        
         var result = await lessonService.GetScheduleAsync(CurrentUserId);
 
         if (!result.IsSuccess)
@@ -20,6 +28,7 @@ public class ScheduleController(ILessonService lessonService) : BaseController
             return View("Error", result.ErrorMessage);
         }
 
+        ViewBag.StartOfWeek = startOfWeek;
         return View(result.Data);
     }
 

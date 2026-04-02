@@ -1,56 +1,141 @@
 @model IEnumerable<Rodentia.Core.Entities.Lesson>
-@{ ViewData["Title"] = "Розклад"; }
+@{
+    ViewData["Title"] = "Розклад";
+    DateTime startOfWeek = ViewBag.StartOfWeek ?? DateTime.Today.AddDays(-(int)(DateTime.Today.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)DateTime.Today.DayOfWeek - 1));
+    string selectedDate = ViewBag.SelectedDate ?? DateTime.Today.ToString("yyyy-MM-dd");
+    var days = new[] { "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя" };
+}
 
-<h2 class="fw-bold mb-4">Мій Розклад</h2>
+<div class="schedule-container p-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold m-0">Мій Розклад</h2>
+            <div class="mt-2">
+                <input type="date" 
+                    id="date-picker" 
+                    class="form-control d-inline-block w-auto shadow-sm" 
+                    value="@selectedDate"
+                    onchange="window.location.href='?date=' + this.value">
+            </div>
+        </div>
+        
+        <div class="week-nav d-flex align-items-center gap-3">
+            <a href="@Url.Action("Index", new { date = startOfWeek.AddDays(-7).ToString("yyyy-MM-dd") })" class="btn btn-outline-secondary btn-sm">← Минулий тиждень</a>
+            <span class="fw-bold text-muted">@startOfWeek.ToString("dd.MM") — @startOfWeek.AddDays(6).ToString("dd.MM.yyyy")</span>
+            <a href="@Url.Action("Index", new { date = startOfWeek.AddDays(7).ToString("yyyy-MM-dd") })" class="btn btn-outline-secondary btn-sm">Наступний тиждень →</a>
+        </div>
 
-<div class="mb-4">
-    <input type="date" class="form-control d-inline-block w-auto" value="@DateTime.Now.ToString("yyyy-MM-dd")">
-</div>
+        <button type="button" id="open-create-lesson-modal" class="btn btn-warning shadow-sm">
+            + Створити заняття
+        </button>
+    </div>
 
-<button type="button" id="open-create-lesson-modal" class="btn btn-warning">
-    Створити заняття
-</button>
+    <div class="schedule-wrapper shadow-sm rounded border">
+        <div class="schedule-scroll-container">
+            <table class="table table-bordered mb-0 text-center align-middle">
+                <thead>
+                    <tr class="sticky-header">
+                        <th class="time-col">Час</th>
+                        @for (int i = 0; i < 7; i++)
+                        {
+                            var currentDay = startOfWeek.AddDays(i);
+                            <th style="border-color: #FFB74D;" class="@(currentDay.Date == DateTime.Today ? "today-header" : "")">
+                                <div class="small fw-normal">@days[i]</div>
+                                <div>@currentDay.ToString("dd.MM")</div>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int h = 0; h <= 23; h++) 
+                    {
+                        <tr>
+                            <td class="time-cell bg-light fw-bold text-muted">@(h.ToString("D2")):00</td>
+                            @for (int d = 0; d < 7; d++)
+                            {
+                                var cellDate = startOfWeek.AddDays(d);
+                                <td class="lesson-slot" style="height: 60px; background-color: #FFFDFB;">
+                                    @{
+                                        var lessonsInSlot = Model?.Where(l => 
+                                            l.ScheduledAt.Date == cellDate.Date && 
+                                            l.ScheduledAt.Hour == h);
 
-<div class="table-responsive shadow-sm rounded">
-    <table class="table table-bordered mb-0 text-center align-middle" style="border-color: #FFE4D3;">
-        <thead style="background-color: #FFA000; color: white;">
-            <tr>
-                <th style="width: 80px;"></th>
-                <th>Понеділок</th>
-                <th>Вівторок</th>
-                <th>Середа</th>
-                <th>Четвер</th>
-                <th>П'ятниця</th>
-                <th>Субота</th>
-                <th>Неділя</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @for (int h = 0; h <= 11; h++) {
-                <tr>
-                    <td class="bg-light fw-bold text-muted">@(h.ToString("D2")):00</td>
-                    @for (int d = 1; d <= 7; d++) {
-                        <td style="height: 50px; background-color: #FFF9F5; position: relative;">
-                            @{
-                                var lesson = Model?.FirstOrDefault(l => l.ScheduledAt.Hour == h && (int)l.ScheduledAt.DayOfWeek == (d % 7));
-                                if (lesson != null) {
-                                    <div class="p-2 rounded shadow-sm text-white lesson-item" 
-                                         data-lesson-id="@lesson.Id" 
-                                         style="background-color: #D00000; font-size: 0.85rem; cursor: pointer; position: relative; z-index: 10;">
-                                        @lesson.DisplayName
-                                    </div>
-                                }
+                                        foreach (var lesson in lessonsInSlot ?? Enumerable.Empty<Rodentia.Core.Entities.Lesson>())
+                                        {
+                                            <div class="lesson-item p-1 rounded shadow-sm text-white" 
+                                                 data-lesson-id="@lesson.Id" 
+                                                 style="background-color: #D00000; font-size: 0.75rem; cursor: pointer; margin-bottom: 2px;">
+                                                <div class="fw-bold text-truncate">@lesson.DisplayName</div>
+                                                <div style="font-size: 0.65rem; opacity: 0.9;">@lesson.Subject</div>
+                                            </div>
+                                        }
+                                    }
+                                </td>
                             }
-                        </td>
+                        </tr>
                     }
-                </tr>
-            }
-        </tbody>
-    </table>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <div id="create-lesson-modal-root"></div>
+
+<style>
+    .schedule-wrapper {
+        background: white;
+        overflow: hidden;
+    }
+    
+    .schedule-scroll-container {
+        max-height: 65vh; 
+        overflow-y: auto;
+    }
+
+    .sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background-color: #FFA000;
+        color: white;
+    }
+
+    .sticky-header th {
+        border-color: #FFB74D !important;
+        padding: 12px 5px;
+    }
+
+    .time-col { width: 80px; }
+
+    .time-cell {
+        font-size: 0.85rem;
+        border-right: 2px solid #FFE4D3 !important;
+    }
+
+    .today-cell {
+        background-color: #FFF3E0 !important;
+        color: #E65100 !important;
+    }
+
+    .lesson-slot {
+        border: 1px solid #FFE4D3 !important;
+        padding: 4px !important;
+        vertical-align: top !important;
+    }
+
+    .lesson-item:hover {
+        transform: scale(1.02);
+        filter: brightness(1.1);
+        transition: 0.2s;
+    }
+
+    .schedule-scroll-container::-webkit-scrollbar { width: 6px; }
+    .schedule-scroll-container::-webkit-scrollbar-thumb {
+        background: #FFCC80;
+        border-radius: 10px;
+    }
+</style>
 
 <link rel="stylesheet" href="~/css/schedule-create-lesson.css" asp-append-version="true" />
 <script src="~/js/schedule-create-lesson.js" asp-append-version="true"></script>
