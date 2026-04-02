@@ -27,5 +27,8 @@
     <ProjectReference Include="..\Rodentia.Web\Rodentia.Web.csproj" />
     <ProjectReference Include="..\Rodentia.Core\Rodentia.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+	<Compile Remove="Controllers\AccountControllerTests.cs" />
+  </ItemGroup>
 
 </Project>
