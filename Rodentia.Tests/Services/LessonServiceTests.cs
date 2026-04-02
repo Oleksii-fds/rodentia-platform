@@ -163,7 +163,7 @@ public sealed class LessonServiceTests
         var result = await _service.CreateLessonAsync(teacher.Id, request);
 
         Assert.False(result.IsSuccess);
-        Assert.Equal("Потрібно вибрати учня.", result.ErrorMessage);
+        Assert.Equal("Оберіть дійсного учня.", result.ErrorMessage);
     }
 
     [Fact]
@@ -190,7 +190,7 @@ public sealed class LessonServiceTests
         var result = await _service.CreateLessonAsync(teacher.Id, request);
 
         Assert.False(result.IsSuccess);
-        Assert.Equal("Потрібно вибрати дату заняття.", result.ErrorMessage);
+        Assert.Equal("Вкажіть коректну дату заняття.", result.ErrorMessage);
     }
 
     [Fact]
@@ -217,7 +217,7 @@ public sealed class LessonServiceTests
         var result = await _service.CreateLessonAsync(teacher.Id, request);
 
         Assert.False(result.IsSuccess);
-        Assert.Equal("Тривалість має бути більшою за 0.", result.ErrorMessage);
+        Assert.Equal("Тривалість не може бути меншою за 0.", result.ErrorMessage);
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public sealed class LessonServiceTests
         var result = await _service.CreateLessonAsync(teacher.Id, request);
 
         Assert.False(result.IsSuccess);
-        Assert.Equal("Предмет обов’язковий.", result.ErrorMessage);
+        Assert.Equal("Вкажіть дисципліну.", result.ErrorMessage);
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public sealed class LessonServiceTests
         var result = await _service.CreateLessonAsync(teacher.Id, request);
 
         Assert.False(result.IsSuccess);
-        Assert.Equal("Цей учень не прив’язаний до викладача.", result.ErrorMessage);
+        Assert.Equal("Цей учень не прикріплений до викладача.", result.ErrorMessage);
     }
 
     [Fact]
@@ -293,6 +293,7 @@ public sealed class LessonServiceTests
                 request.StudentId,
                 It.IsAny<DateTime>(),
                 request.DurationMinutes,
+                null,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
@@ -331,6 +332,7 @@ public sealed class LessonServiceTests
                 request.StudentId,
                 It.IsAny<DateTime>(),
                 request.DurationMinutes,
+                null,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
@@ -363,6 +365,183 @@ public sealed class LessonServiceTests
         _lessonRepositoryMock.Verify(
             x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task GetEditLessonModalDataAsync_ShouldReturnFailure_WhenLessonNotFound()
+    {
+        var teacherId = Guid.NewGuid();
+        var lessonId = Guid.NewGuid();
+
+        _lessonRepositoryMock.Setup(x => x.GetLessonByIdAsync(lessonId, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync((Lesson)null!);
+
+        var result = await _service.GetEditLessonModalDataAsync(teacherId, lessonId);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Заняття не знайдено.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GetEditLessonModalDataAsync_ShouldReturnFailure_WhenTeacherNotOwner()
+    {
+        var teacherId = Guid.NewGuid();
+        var lesson = new Lesson { Id = Guid.NewGuid(), TeacherId = Guid.NewGuid() };
+
+        _lessonRepositoryMock.Setup(x => x.GetLessonByIdAsync(lesson.Id, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync(lesson);
+
+        var result = await _service.GetEditLessonModalDataAsync(teacherId, lesson.Id);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Ви не маєте доступу до цього заняття.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GetEditLessonModalDataAsync_ShouldReturnSuccess_WhenValid()
+    {
+        var teacherId = Guid.NewGuid();
+        var lesson = new Lesson 
+        { 
+            Id = Guid.NewGuid(), 
+            TeacherId = teacherId, 
+            ScheduledAt = DateTime.UtcNow, 
+            DurationMinutes = 60,
+            Subject = "Test Subject"
+        };
+        var students = new List<User> { CreateUser(UserRole.Student) };
+
+        _lessonRepositoryMock.Setup(x => x.GetLessonByIdAsync(lesson.Id, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync(lesson);
+        _lessonRepositoryMock.Setup(x => x.GetActiveStudentsByTeacherIdAsync(teacherId, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync(students);
+
+        var result = await _service.GetEditLessonModalDataAsync(teacherId, lesson.Id);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(lesson.Id, result.Data!.LessonId);
+        Assert.Equal(lesson.Subject, result.Data.Subject);
+        Assert.Single(result.Data.Students);
+    }
+
+    [Fact]
+    public async Task EditLessonAsync_ShouldReturnFailure_WhenLessonNotFound()
+    {
+        var teacherId = Guid.NewGuid();
+        var request = new EditLessonRequest { LessonId = Guid.NewGuid() };
+
+        _lessonRepositoryMock.Setup(x => x.GetLessonByIdAsync(request.LessonId, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync((Lesson)null!);
+
+        var result = await _service.EditLessonAsync(teacherId, request);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Заняття не знайдено.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task EditLessonAsync_ShouldReturnFailure_WhenTeacherNotOwner()
+    {
+        var teacherId = Guid.NewGuid();
+        var lesson = new Lesson { Id = Guid.NewGuid(), TeacherId = Guid.NewGuid() };
+        var request = new EditLessonRequest { LessonId = lesson.Id };
+
+        _lessonRepositoryMock.Setup(x => x.GetLessonByIdAsync(request.LessonId, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync(lesson);
+
+        var result = await _service.EditLessonAsync(teacherId, request);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Ви не маєте доступу до цього заняття.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task EditLessonAsync_ShouldReturnFailure_WhenDurationIsInvalid()
+    {
+        var teacherId = Guid.NewGuid();
+        var lesson = new Lesson { Id = Guid.NewGuid(), TeacherId = teacherId };
+        var request = new EditLessonRequest { LessonId = lesson.Id, DurationMinutes = 0 };
+
+        _lessonRepositoryMock.Setup(x => x.GetLessonByIdAsync(request.LessonId, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync(lesson);
+
+        var result = await _service.EditLessonAsync(teacherId, request);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Тривалість має бути більшою за 0.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task EditLessonAsync_ShouldReturnFailure_WhenSubjectIsEmpty()
+    {
+        var teacherId = Guid.NewGuid();
+        var lesson = new Lesson { Id = Guid.NewGuid(), TeacherId = teacherId };
+        var request = new EditLessonRequest { LessonId = lesson.Id, DurationMinutes = 60, Subject = " " };
+
+        _lessonRepositoryMock.Setup(x => x.GetLessonByIdAsync(request.LessonId, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync(lesson);
+
+        var result = await _service.EditLessonAsync(teacherId, request);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Предмет обов’язковий.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task EditLessonAsync_ShouldReturnFailure_WhenHasConflict()
+    {
+        var teacherId = Guid.NewGuid();
+        var lesson = new Lesson { Id = Guid.NewGuid(), TeacherId = teacherId };
+        var request = new EditLessonRequest 
+        { 
+            LessonId = lesson.Id, 
+            DurationMinutes = 60, 
+            Subject = "Physics",
+            LessonDate = DateTime.Today,
+            StartTime = new TimeSpan(10, 0, 0)
+        };
+
+        _lessonRepositoryMock.Setup(x => x.GetLessonByIdAsync(request.LessonId, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync(lesson);
+                             
+        _lessonRepositoryMock.Setup(x => x.HasConflictAsync(teacherId, request.StudentId, It.IsAny<DateTime>(), request.DurationMinutes, lesson.Id, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync(true);
+
+        var result = await _service.EditLessonAsync(teacherId, request);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("На цей час уже є інше заняття.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task EditLessonAsync_ShouldReturnSuccess_WhenValid()
+    {
+        var teacherId = Guid.NewGuid();
+        var lesson = new Lesson { Id = Guid.NewGuid(), TeacherId = teacherId, Subject = "Old Subject" };
+        var request = new EditLessonRequest 
+        { 
+            LessonId = lesson.Id, 
+            StudentId = Guid.NewGuid(),
+            Subject = "New Subject",
+            DurationMinutes = 90,
+            LessonDate = DateTime.Today,
+            StartTime = new TimeSpan(14, 0, 0)
+        };
+
+        _lessonRepositoryMock.Setup(x => x.GetLessonByIdAsync(request.LessonId, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync(lesson);
+                             
+        _lessonRepositoryMock.Setup(x => x.HasConflictAsync(teacherId, request.StudentId, It.IsAny<DateTime>(), request.DurationMinutes, lesson.Id, It.IsAny<CancellationToken>()))
+                             .ReturnsAsync(false);
+
+        var result = await _service.EditLessonAsync(teacherId, request);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("New Subject", lesson.Subject);
+        Assert.Equal(90, lesson.DurationMinutes);
+        _lessonRepositoryMock.Verify(x => x.UpdateAsync(lesson, It.IsAny<CancellationToken>()), Times.Once);
+        _lessonRepositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static User CreateUser(

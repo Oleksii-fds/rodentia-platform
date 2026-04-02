@@ -4,6 +4,14 @@ namespace Rodentia.Core.Interfaces;
 
 public interface ILessonRepository
 {
+    Task<Lesson> GetLessonByIdAsync(
+        Guid lessonId, 
+        CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(
+        Lesson lesson, 
+        CancellationToken cancellationToken = default);
+
     Task<IEnumerable<Lesson>> GetByUserIdAsync(
         Guid userId,
         CancellationToken cancellationToken = default);
@@ -26,6 +34,7 @@ public interface ILessonRepository
         Guid studentId,
         DateTime scheduledAt,
         int durationMinutes,
+        Guid? excludeLessonId = null,
         CancellationToken cancellationToken = default);
 
     Task AddAsync(

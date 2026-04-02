@@ -6,9 +6,11 @@
 <div class="mb-4">
     <input type="date" class="form-control d-inline-block w-auto" value="@DateTime.Now.ToString("yyyy-MM-dd")">
 </div>
+
 <button type="button" id="open-create-lesson-modal" class="btn btn-warning">
-                Створити заняття
-            </button>
+    Створити заняття
+</button>
+
 <div class="table-responsive shadow-sm rounded">
     <table class="table table-bordered mb-0 text-center align-middle" style="border-color: #FFE4D3;">
         <thead style="background-color: #FFA000; color: white;">
@@ -29,11 +31,13 @@
                 <tr>
                     <td class="bg-light fw-bold text-muted">@(h.ToString("D2")):00</td>
                     @for (int d = 1; d <= 7; d++) {
-                        <td style="height: 50px; background-color: #FFF9F5;">
+                        <td style="height: 50px; background-color: #FFF9F5; position: relative;">
                             @{
                                 var lesson = Model?.FirstOrDefault(l => l.ScheduledAt.Hour == h && (int)l.ScheduledAt.DayOfWeek == (d % 7));
                                 if (lesson != null) {
-                                    <div class="p-2 rounded shadow-sm text-white" style="background-color: #D00000; font-size: 0.85rem;">
+                                    <div class="p-2 rounded shadow-sm text-white lesson-item" 
+                                         data-lesson-id="@lesson.Id" 
+                                         style="background-color: #D00000; font-size: 0.85rem; cursor: pointer; position: relative; z-index: 10;">
                                         @lesson.DisplayName
                                     </div>
                                 }
@@ -45,6 +49,7 @@
         </tbody>
     </table>
 </div>
+
 <div id="create-lesson-modal-root"></div>
 
 <link rel="stylesheet" href="~/css/schedule-create-lesson.css" asp-append-version="true" />

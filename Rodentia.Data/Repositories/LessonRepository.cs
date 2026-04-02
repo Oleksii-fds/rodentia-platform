@@ -15,6 +15,19 @@ public sealed class LessonRepository : ILessonRepository
         _dbContext = dbContext;
     }
 
+    // --- НОВІ МЕТОДИ ДЛЯ РЕДАГУВАННЯ ---
+    public async Task<Lesson?> GetLessonByIdAsync(Guid lessonId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Lessons.FirstOrDefaultAsync(x => x.Id == lessonId, cancellationToken);
+    }
+
+    public Task UpdateAsync(Lesson lesson, CancellationToken cancellationToken = default)
+    {
+        _dbContext.Lessons.Update(lesson);
+        return Task.CompletedTask;
+    }
+    // -----------------------------------
+
     public async Task<IEnumerable<Lesson>> GetByUserIdAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
@@ -74,6 +87,7 @@ public sealed class LessonRepository : ILessonRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
     }
+
     public async Task<IEnumerable<User>> GetActiveStudentsByTeacherIdAsync(
         Guid teacherId,
         CancellationToken cancellationToken = default)
@@ -101,11 +115,13 @@ public sealed class LessonRepository : ILessonRepository
             cancellationToken);
     }
 
+    // --- ОНОВЛЕНИЙ МЕТОД (додано excludeLessonId) ---
     public async Task<bool> HasConflictAsync(
         Guid teacherId,
         Guid studentId,
         DateTime scheduledAt,
         int durationMinutes,
+        Guid? excludeLessonId = null, // Новий параметр
         CancellationToken cancellationToken = default)
     {
         if (scheduledAt.Kind == DateTimeKind.Unspecified)
@@ -126,7 +142,8 @@ public sealed class LessonRepository : ILessonRepository
                 x.Status != LessonStatus.Canceled &&
                 x.ScheduledAt >= dayStart &&
                 x.ScheduledAt < dayEnd &&
-                (x.TeacherId == teacherId || x.StudentId == studentId))
+                (x.TeacherId == teacherId || x.StudentId == studentId) &&
+                (excludeLessonId == null || x.Id != excludeLessonId)) // Ігноруємо поточне заняття
             .ToListAsync(cancellationToken);
 
         return lessons.Any(x =>

@@ -16,4 +16,12 @@ public interface ILessonService
         Guid teacherId,
         CreateLessonRequest request,
         CancellationToken cancellationToken = default);
+    Task<Result<EditLessonModalDto>> GetEditLessonModalDataAsync(
+        Guid teacherId, 
+        Guid lessonId, 
+        CancellationToken cancellationToken = default);
+    Task<Result> EditLessonAsync(
+        Guid teacherId, 
+        EditLessonRequest request, 
+        CancellationToken cancellationToken = default);
 }
