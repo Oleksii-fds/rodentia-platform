@@ -15,7 +15,6 @@ public sealed class LessonRepository : ILessonRepository
         _dbContext = dbContext;
     }
 
-    // --- НОВІ МЕТОДИ ДЛЯ РЕДАГУВАННЯ ---
     public async Task<Lesson?> GetLessonByIdAsync(Guid lessonId, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Lessons.FirstOrDefaultAsync(x => x.Id == lessonId, cancellationToken);
@@ -26,7 +25,6 @@ public sealed class LessonRepository : ILessonRepository
         _dbContext.Lessons.Update(lesson);
         return Task.CompletedTask;
     }
-    // -----------------------------------
 
     public async Task<IEnumerable<Lesson>> GetByUserIdAsync(
         Guid userId,
@@ -115,13 +113,13 @@ public sealed class LessonRepository : ILessonRepository
             cancellationToken);
     }
 
-    // --- ОНОВЛЕНИЙ МЕТОД (додано excludeLessonId) ---
+
     public async Task<bool> HasConflictAsync(
         Guid teacherId,
         Guid studentId,
         DateTime scheduledAt,
         int durationMinutes,
-        Guid? excludeLessonId = null, // Новий параметр
+        Guid? excludeLessonId = null, 
         CancellationToken cancellationToken = default)
     {
         if (scheduledAt.Kind == DateTimeKind.Unspecified)
@@ -143,7 +141,7 @@ public sealed class LessonRepository : ILessonRepository
                 x.ScheduledAt >= dayStart &&
                 x.ScheduledAt < dayEnd &&
                 (x.TeacherId == teacherId || x.StudentId == studentId) &&
-                (excludeLessonId == null || x.Id != excludeLessonId)) // Ігноруємо поточне заняття
+                (excludeLessonId == null || x.Id != excludeLessonId)) 
             .ToListAsync(cancellationToken);
 
         return lessons.Any(x =>
@@ -165,5 +163,10 @@ public sealed class LessonRepository : ILessonRepository
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+    public Task DeleteAsync(Lesson lesson, CancellationToken cancellationToken = default)
+    {
+    _dbContext.Lessons.Remove(lesson);
+    return Task.CompletedTask;
     }
 }

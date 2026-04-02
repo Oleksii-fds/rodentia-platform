@@ -576,4 +576,61 @@ public sealed class LessonServiceTests
             Notes = "Підготувати вправи"
         };
     }
+
+    [Fact]
+    public async Task DeleteLessonAsync_ShouldReturnFailure_WhenLessonNotFound()
+    {
+        var teacherId = Guid.NewGuid();
+        var lessonId = Guid.NewGuid();
+
+        _lessonRepositoryMock
+            .Setup(x => x.GetLessonByIdAsync(lessonId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Lesson?)null);
+
+        var result = await _service.DeleteLessonAsync(teacherId, lessonId);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Заняття не знайдено.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task DeleteLessonAsync_ShouldReturnFailure_WhenTeacherNotOwner()
+    {
+        var teacherId = Guid.NewGuid();
+        var lesson = new Lesson { Id = Guid.NewGuid(), TeacherId = Guid.NewGuid() }; // Інший вчитель
+
+        _lessonRepositoryMock
+            .Setup(x => x.GetLessonByIdAsync(lesson.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(lesson);
+
+        var result = await _service.DeleteLessonAsync(teacherId, lesson.Id);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Ви не маєте доступу до цього заняття.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task DeleteLessonAsync_ShouldReturnSuccess_WhenValid()
+    {
+        var teacherId = Guid.NewGuid();
+        var lesson = new Lesson { Id = Guid.NewGuid(), TeacherId = teacherId };
+
+        _lessonRepositoryMock
+            .Setup(x => x.GetLessonByIdAsync(lesson.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(lesson);
+
+        _lessonRepositoryMock
+            .Setup(x => x.DeleteAsync(lesson, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _lessonRepositoryMock
+            .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await _service.DeleteLessonAsync(teacherId, lesson.Id);
+
+        Assert.True(result.IsSuccess);
+        _lessonRepositoryMock.Verify(x => x.DeleteAsync(lesson, It.IsAny<CancellationToken>()), Times.Once);
+        _lessonRepositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

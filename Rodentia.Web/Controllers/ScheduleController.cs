@@ -107,7 +107,7 @@ public class ScheduleController(ILessonService lessonService) : BaseController
         });
     }
 
-    // --- НОВІ МЕТОДИ ДЛЯ РЕДАГУВАННЯ ЗАНЯТТЯ ---
+
 
     [HttpGet]
     public async Task<IActionResult> EditLessonModal(Guid lessonId, CancellationToken cancellationToken)
@@ -190,5 +190,18 @@ public class ScheduleController(ILessonService lessonService) : BaseController
         { 
             message = "Заняття успішно оновлено." 
         });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteLesson(Guid lessonId, CancellationToken cancellationToken)
+    {
+        var result = await lessonService.DeleteLessonAsync(CurrentUserId, lessonId, cancellationToken);
+        
+        if (!result.IsSuccess) 
+        {
+            return BadRequest(new { message = result.ErrorMessage ?? "Не вдалося видалити заняття." });
+        }
+
+        return Ok(new { message = "Заняття успішно видалено." });
     }
 }

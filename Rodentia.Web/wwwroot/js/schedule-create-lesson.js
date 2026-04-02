@@ -213,3 +213,33 @@ function escapeHtml(value) {
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 }
+
+async function deleteLesson(lessonId) {
+    if (!confirm('Ви впевнені, що хочете видалити це заняття?')) {
+        return;
+    }
+
+    const tokenElement = document.querySelector('#edit-lesson-form input[name="__RequestVerificationToken"]');
+    const token = tokenElement ? tokenElement.value : '';
+
+    try {
+        const response = await fetch(`/Schedule/DeleteLesson?lessonId=${lessonId}`, {
+            method: "POST",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "RequestVerificationToken": token 
+            }
+        });
+
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+
+        const payload = await response.json();
+        alert(payload.message || "Сталася помилка при видаленні.");
+    } catch (error) {
+        console.error("Delete error:", error);
+        alert("Не вдалося зв'язатися з сервером.");
+    }
+}

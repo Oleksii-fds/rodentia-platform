@@ -207,4 +207,16 @@ public sealed class LessonService : ILessonService
 
         return Result.Ok();
     }
+    public async Task<Result> DeleteLessonAsync(Guid teacherId, Guid lessonId, CancellationToken cancellationToken = default)
+    {
+    var lesson = await _lessonRepository.GetLessonByIdAsync(lessonId, cancellationToken);
+    
+    if (lesson == null) return Result.Failure("Заняття не знайдено.");
+    if (lesson.TeacherId != teacherId) return Result.Failure("Ви не маєте доступу до цього заняття.");
+
+    await _lessonRepository.DeleteAsync(lesson, cancellationToken);
+    await _lessonRepository.SaveChangesAsync(cancellationToken);
+
+    return Result.Ok();
+    }
 }

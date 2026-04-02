@@ -24,4 +24,5 @@ public interface ILessonService
         Guid teacherId, 
         EditLessonRequest request, 
         CancellationToken cancellationToken = default);
+    Task<Result> DeleteLessonAsync(Guid teacherId, Guid lessonId, CancellationToken cancellationToken = default);
 }
