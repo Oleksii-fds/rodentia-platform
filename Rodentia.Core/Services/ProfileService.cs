@@ -36,14 +36,60 @@ public sealed class ProfileService : IProfileService
             PhoneNumber = user.PhoneNumber,
             RoleLabel = MapRoleLabel(user.Role),
             AvatarPath = user.AvatarPath,
-            StudentCode = user.Role == UserRole.Student
-                ? user.UniqueCode
-                : null
+            StudentCode = user.Role == UserRole.Student ? user.UniqueCode : null
         };
 
         return dto;
     }
 
+    public async Task<Result<StudentProfileDto>> GetStudentProfileAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _profileRepository.GetByIdAsync(studentId, cancellationToken);
+        if (user is null)
+            return Result<StudentProfileDto>.Failure("Користувача не знайдено.");
+
+        if (user.Role != UserRole.Student)
+            return Result<StudentProfileDto>.Failure("Цей користувач не є учнем.");
+
+        var dto = new StudentProfileDto
+        {
+            UserId = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email ?? string.Empty,
+            PhoneNumber = user.PhoneNumber,
+            AvatarPath = user.AvatarPath,
+            StudentCode = user.UniqueCode,
+            StudentClass = user.StudentClass
+        };
+
+        return Result<StudentProfileDto>.SuccessData(dto);
+    }
+    public async Task<Result<TeacherProfileDto>> GetTeacherProfileAsync(
+    Guid teacherId,
+    CancellationToken cancellationToken = default)
+    {
+        var user = await _profileRepository.GetByIdAsync(teacherId, cancellationToken);
+        if (user is null)
+            return Result<TeacherProfileDto>.Failure("Користувача не знайдено.");
+
+        if (user.Role != UserRole.Teacher)
+            return Result<TeacherProfileDto>.Failure("Цей користувач не є викладачем.");
+
+        var dto = new TeacherProfileDto
+        {
+            UserId = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email ?? string.Empty,
+            PhoneNumber = user.PhoneNumber,
+            AvatarPath = user.AvatarPath,
+        };
+
+        return Result<TeacherProfileDto>.SuccessData(dto);
+    }
     public async Task<Result> UpdateOwnProfileAsync(
         Guid currentUserId,
         UpdateOwnProfileRequest request,

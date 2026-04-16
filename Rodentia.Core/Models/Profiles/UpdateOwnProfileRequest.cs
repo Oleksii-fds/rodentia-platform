@@ -9,4 +9,6 @@ public sealed class UpdateOwnProfileRequest
     public string CurrentPassword { get; init; }
     public string NewPassword { get; init; }
     public string AvatarPath { get; init; }
+
+    public string StudentClass { get; set; }
 }

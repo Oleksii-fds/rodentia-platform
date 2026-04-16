@@ -19,4 +19,10 @@ public interface IProfileService
         Guid currentUserId,
         UpdateOwnProfileRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<Result<StudentProfileDto>> GetStudentProfileAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default);
+    Task<Result<TeacherProfileDto>> GetTeacherProfileAsync(
+    Guid teacherId, CancellationToken cancellationToken = default);
 }

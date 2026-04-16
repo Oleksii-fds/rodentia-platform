@@ -40,7 +40,6 @@ public sealed class ProfileServiceTests
     [Fact]
     public async Task GetOwnProfileAsync_ShouldReturnStudentCode_FromUniqueCodeField()
     {
-        // UniqueCode тепер береться з БД, а не генерується з userId
         var user = CreateUser(UserRole.Student, uniqueCode: "ROD-AB123");
         _profileRepositoryMock
             .Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
@@ -108,14 +107,12 @@ public sealed class ProfileServiceTests
             .Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        var request = new UpdateOwnProfileRequest
+        var result = await _service.UpdateOwnProfileAsync(user.Id, new UpdateOwnProfileRequest
         {
             FirstName = "   ",
             LastName = "Прізвище",
             Email = "e@test.com"
-        };
-
-        var result = await _service.UpdateOwnProfileAsync(user.Id, request);
+        });
 
         Assert.False(result.IsSuccess);
         Assert.Equal("Імʼя обовʼязкове.", result.ErrorMessage);
@@ -130,14 +127,12 @@ public sealed class ProfileServiceTests
             .Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        var request = new UpdateOwnProfileRequest
+        var result = await _service.UpdateOwnProfileAsync(user.Id, new UpdateOwnProfileRequest
         {
             FirstName = "Ім'я",
             LastName = "   ",
             Email = "e@test.com"
-        };
-
-        var result = await _service.UpdateOwnProfileAsync(user.Id, request);
+        });
 
         Assert.False(result.IsSuccess);
         Assert.Equal("Прізвище обовʼязкове.", result.ErrorMessage);
@@ -151,14 +146,12 @@ public sealed class ProfileServiceTests
             .Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        var request = new UpdateOwnProfileRequest
+        var result = await _service.UpdateOwnProfileAsync(user.Id, new UpdateOwnProfileRequest
         {
             FirstName = "Ім'я",
             LastName = "Прізвище",
             Email = "   "
-        };
-
-        var result = await _service.UpdateOwnProfileAsync(user.Id, request);
+        });
 
         Assert.False(result.IsSuccess);
         Assert.Equal("Email обовʼязковий.", result.ErrorMessage);
@@ -275,9 +268,197 @@ public sealed class ProfileServiceTests
         Assert.Contains("Incorrect password.", result.ErrorMessage);
     }
 
+    // =========================================================================
+    // ЮЗ КЕЙС 1: Викладач переглядає профіль учня — GetStudentProfileAsync
+    // =========================================================================
 
-    private static User CreateUser(UserRole role = UserRole.Student, string uniqueCode = "ROD-11111")
-        => new()
+    [Fact]
+    public async Task GetStudentProfileAsync_ShouldReturnFailure_WhenUserNotFound()
+    {
+        var studentId = Guid.NewGuid();
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(studentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User)null);
+
+        var result = await _service.GetStudentProfileAsync(studentId);
+
+        Assert.False(result.IsSuccess);
+        Assert.Null(result.Data);
+        Assert.Equal("Користувача не знайдено.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GetStudentProfileAsync_ShouldReturnFailure_WhenUserIsNotStudent()
+    {
+        var teacher = CreateUser(UserRole.Teacher);
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(teacher.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(teacher);
+
+        var result = await _service.GetStudentProfileAsync(teacher.Id);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Цей користувач не є учнем.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GetStudentProfileAsync_ShouldReturnSuccess_WhenStudentExists()
+    {
+        var student = CreateUser(UserRole.Student);
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(student.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(student);
+
+        var result = await _service.GetStudentProfileAsync(student.Id);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+    }
+
+    [Fact]
+    public async Task GetStudentProfileAsync_ShouldMapAllFields_Correctly()
+    {
+        var student = CreateUser(UserRole.Student, uniqueCode: "ROD-XY999", studentClass: "10-А");
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(student.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(student);
+
+        var result = await _service.GetStudentProfileAsync(student.Id);
+
+        Assert.True(result.IsSuccess);
+        var dto = result.Data!;
+        Assert.Equal(student.Id, dto.UserId);
+        Assert.Equal("Іван", dto.FirstName);
+        Assert.Equal("Петренко", dto.LastName);
+        Assert.Equal("ivan@test.com", dto.Email);
+        Assert.Equal("+380671112233", dto.PhoneNumber);
+        Assert.Equal("ROD-XY999", dto.StudentCode);
+        Assert.Equal("10-А", dto.StudentClass);
+        Assert.Equal("/uploads/av.jpg", dto.AvatarPath);
+    }
+
+    [Fact]
+    public async Task GetStudentProfileAsync_ShouldReturnUniqueCode_FromDatabase()
+    {
+        var student = CreateUser(UserRole.Student, uniqueCode: "ROD-AB123");
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(student.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(student);
+
+        var result = await _service.GetStudentProfileAsync(student.Id);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("ROD-AB123", result.Data!.StudentCode);
+    }
+
+    [Fact]
+    public async Task GetStudentProfileAsync_ShouldReturnNullStudentClass_WhenNotSet()
+    {
+        var student = CreateUser(UserRole.Student, studentClass: null);
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(student.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(student);
+
+        var result = await _service.GetStudentProfileAsync(student.Id);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Data!.StudentClass);
+    }
+
+    // =========================================================================
+    // ЮЗ КЕЙС 2: Учень переглядає профіль викладача — GetTeacherProfileAsync
+    // =========================================================================
+
+    [Fact]
+    public async Task GetTeacherProfileAsync_ShouldReturnFailure_WhenUserNotFound()
+    {
+        var teacherId = Guid.NewGuid();
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(teacherId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User)null);
+
+        var result = await _service.GetTeacherProfileAsync(teacherId);
+
+        Assert.False(result.IsSuccess);
+        Assert.Null(result.Data);
+        Assert.Equal("Користувача не знайдено.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GetTeacherProfileAsync_ShouldReturnFailure_WhenUserIsNotTeacher()
+    {
+        var student = CreateUser(UserRole.Student);
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(student.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(student);
+
+        var result = await _service.GetTeacherProfileAsync(student.Id);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Цей користувач не є викладачем.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GetTeacherProfileAsync_ShouldReturnSuccess_WhenTeacherExists()
+    {
+        var teacher = CreateTeacher();
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(teacher.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(teacher);
+
+        var result = await _service.GetTeacherProfileAsync(teacher.Id);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+    }
+
+    [Fact]
+    public async Task GetTeacherProfileAsync_ShouldMapAllFields_Correctly()
+    {
+        var teacher = CreateTeacher();
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(teacher.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(teacher);
+
+        var result = await _service.GetTeacherProfileAsync(teacher.Id);
+
+        Assert.True(result.IsSuccess);
+        var dto = result.Data!;
+        Assert.Equal(teacher.Id, dto.UserId);
+        Assert.Equal("Олена", dto.FirstName);
+        Assert.Equal("Коваленко", dto.LastName);
+        Assert.Equal("olena@teacher.com", dto.Email);
+        Assert.Equal("+380671119988", dto.PhoneNumber);
+        Assert.Equal("/uploads/teach.jpg", dto.AvatarPath);
+    }
+
+    [Fact]
+    public void GetTeacherProfileAsync_ShouldNotExposeStudentCode()
+    {
+        var prop = typeof(TeacherProfileDto).GetProperty("StudentCode");
+        Assert.Null(prop);
+    }
+
+    [Fact]
+    public async Task GetTeacherProfileAsync_ShouldReturnNullPhoneNumber_WhenNotSet()
+    {
+        var teacher = CreateTeacher(phoneNumber: null);
+        _profileRepositoryMock
+            .Setup(x => x.GetByIdAsync(teacher.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(teacher);
+
+        var result = await _service.GetTeacherProfileAsync(teacher.Id);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Data!.PhoneNumber);
+    }
+
+
+
+    private static User CreateUser(
+        UserRole role = UserRole.Student,
+        string uniqueCode = "ROD-11111",
+        string studentClass = "10-А") => new()
         {
             Id = Guid.NewGuid(),
             FirstName = "Іван",
@@ -286,14 +467,27 @@ public sealed class ProfileServiceTests
             UserName = "ivan@test.com",
             PhoneNumber = "+380671112233",
             UniqueCode = uniqueCode,
+            StudentClass = studentClass,
+            AvatarPath = "/uploads/av.jpg",
             Role = role
         };
 
-    private static UpdateOwnProfileRequest CreateValidRequest()
-        => new()
-        {
-            FirstName = "НовеІмя",
-            LastName = "НовеПрізвище",
-            Email = "new@test.com"
-        };
+    private static User CreateTeacher(string phoneNumber = "+380671119988") => new()
+    {
+        Id = Guid.NewGuid(),
+        FirstName = "Олена",
+        LastName = "Коваленко",
+        Email = "olena@teacher.com",
+        UserName = "olena@teacher.com",
+        PhoneNumber = phoneNumber,
+        AvatarPath = "/uploads/teach.jpg",
+        Role = UserRole.Teacher
+    };
+
+    private static UpdateOwnProfileRequest CreateValidRequest() => new()
+    {
+        FirstName = "НовеІмя",
+        LastName = "НовеПрізвище",
+        Email = "new@test.com"
+    };
 }
