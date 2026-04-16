@@ -32,16 +32,28 @@ public sealed class EditLessonModalViewModel
     [Display(Name = "Предмет")]
     public string Subject { get; set; } = string.Empty;
 
-    [Display(Name = "Тема (необов'язково)")]
+    [Display(Name = "Тема")]
     public string Topic { get; set; }
 
     [Range(0, 10000, ErrorMessage = "Некоректна ціна")]
     [Display(Name = "Ціна")]
     public decimal Price { get; set; }
 
-    [Display(Name = "Статус")]
+    [Display(Name = "Статус заняття")]
     public LessonStatus Status { get; set; }
+
+    [Display(Name = "Оплачено")]
+    public bool IsPaid { get; set; }
 
     [Display(Name = "Нотатки")]
     public string Notes { get; set; }
+
+    [Display(Name = "Домашнє завдання")]
+    public string Homework { get; set; }
+
+    [Display(Name = "Матеріали та посилання")]
+    public string MaterialLinks { get; set; }
+
+    [Display(Name = "Успіхи та проблеми учня")]
+    public string ProgressNote { get; set; }
 }

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
     <ProjectReference Include="..\Rodentia.Core\Rodentia.Core.csproj" />
@@ -25,6 +25,7 @@
     <Nullable>enable</Nullable> <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <UserSecretsId>7a96a2ab-8d4f-4b2b-87c8-aaaa9f5aaaa6</UserSecretsId>
   </PropertyGroup>
 
 </Project>

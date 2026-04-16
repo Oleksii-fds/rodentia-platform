@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
 using Rodentia.Core.Models;
@@ -8,10 +9,14 @@ namespace Rodentia.Core.Services;
 public sealed class LessonService : ILessonService
 {
     private readonly ILessonRepository _lessonRepository;
+    private readonly RodentiaOptions _options;
 
-    public LessonService(ILessonRepository lessonRepository)
+    public LessonService(
+        ILessonRepository lessonRepository,
+        IOptions<RodentiaOptions> options)
     {
         _lessonRepository = lessonRepository;
+        _options = options.Value;
     }
 
     public async Task<Result<IEnumerable<Lesson>>> GetScheduleAsync(Guid userId)
@@ -21,23 +26,15 @@ public sealed class LessonService : ILessonService
     }
 
     public async Task<Result<CreateLessonModalDto>> GetCreateLessonModalDataAsync(
-        Guid teacherId,
-        CancellationToken cancellationToken = default)
+        Guid teacherId, CancellationToken cancellationToken = default)
     {
         var teacher = await _lessonRepository.GetUserByIdAsync(teacherId, cancellationToken);
         if (teacher is null)
-        {
             return Result<CreateLessonModalDto>.Failure("Користувача не знайдено.");
-        }
-
         if (teacher.Role != UserRole.Teacher)
-        {
             return Result<CreateLessonModalDto>.Failure("Лише викладач може створювати заняття.");
-        }
 
-        var students = await _lessonRepository.GetActiveStudentsByTeacherIdAsync(
-            teacherId,
-            cancellationToken);
+        var students = await _lessonRepository.GetActiveStudentsByTeacherIdAsync(teacherId, cancellationToken);
 
         var dto = new CreateLessonModalDto
         {
@@ -50,7 +47,7 @@ public sealed class LessonService : ILessonService
                 .OrderBy(x => x.FullName)
                 .ToList(),
             DefaultDate = DateTime.Today,
-            DefaultDurationMinutes = 60,
+            DefaultDurationMinutes = Math.Max(60, _options.MinLessonDurationMinutes),
             DefaultStatus = LessonStatus.Scheduled
         };
 
@@ -58,66 +55,35 @@ public sealed class LessonService : ILessonService
     }
 
     public async Task<Result> CreateLessonAsync(
-        Guid teacherId,
-        CreateLessonRequest request,
-        CancellationToken cancellationToken = default)
+        Guid teacherId, CreateLessonRequest request, CancellationToken cancellationToken = default)
     {
         var teacher = await _lessonRepository.GetUserByIdAsync(teacherId, cancellationToken);
-        if (teacher is null)
-        {
-            return Result.Failure("Користувача не знайдено.");
-        }
+        if (teacher is null) return Result.Failure("Користувача не знайдено.");
+        if (teacher.Role != UserRole.Teacher) return Result.Failure("Лише викладач може створювати заняття.");
+        if (request.StudentId == Guid.Empty) return Result.Failure("Оберіть дійсного учня.");
+        if (request.LessonDate == default) return Result.Failure("Вкажіть коректну дату заняття.");
 
-        if (teacher.Role != UserRole.Teacher)
-        {
-            return Result.Failure("Лише викладач може створювати заняття.");
-        }
-
-        if (request.StudentId == Guid.Empty)
-        {
-            return Result.Failure("Оберіть дійсного учня.");
-        }
-
-        if (request.LessonDate == default)
-        {
-            return Result.Failure("Вкажіть коректну дату заняття.");
-        }
-
-        if (request.DurationMinutes <= 0)
-        {
-            return Result.Failure("Тривалість не може бути меншою за 0.");
-        }
-
+        if (request.DurationMinutes < _options.MinLessonDurationMinutes)
+            return Result.Failure($"Тривалість не може бути меншою за {_options.MinLessonDurationMinutes} хвилин.");
+        if (request.DurationMinutes > _options.MaxLessonDurationMinutes)
+            return Result.Failure($"Тривалість не може перевищувати {_options.MaxLessonDurationMinutes} хвилин.");
         if (string.IsNullOrWhiteSpace(request.Subject))
-        {
             return Result.Failure("Вкажіть дисципліну.");
-        }
+
+        var maxDate = DateTime.Today.AddDays(_options.ScheduleAheadDays);
+        if (request.LessonDate.Date > maxDate)
+            return Result.Failure($"Не можна планувати заняття більш ніж на {_options.ScheduleAheadDays} днів наперед.");
 
         var linkIsActive = await _lessonRepository.IsTeacherStudentLinkActiveAsync(
-            teacherId,
-            request.StudentId,
-            cancellationToken);
-
-        if (!linkIsActive)
-        {
-            return Result.Failure("Цей учень не прикріплений до викладача.");
-        }
+            teacherId, request.StudentId, cancellationToken);
+        if (!linkIsActive) return Result.Failure("Цей учень не прикріплений до викладача.");
 
         var localScheduledAt = request.LessonDate.Date + request.StartTime;
         var scheduledAt = DateTime.SpecifyKind(localScheduledAt, DateTimeKind.Utc);
 
         var hasConflict = await _lessonRepository.HasConflictAsync(
-            teacherId,
-            request.StudentId,
-            scheduledAt,
-            request.DurationMinutes,
-            null, 
-            cancellationToken);
-
-        if (hasConflict)
-        {
-            return Result.Failure("На цей час уже є інше заняття.");
-        }
+            teacherId, request.StudentId, scheduledAt, request.DurationMinutes, null, cancellationToken);
+        if (hasConflict) return Result.Failure("На цей час уже є інше заняття.");
 
         var lesson = new Lesson
         {
@@ -129,22 +95,24 @@ public sealed class LessonService : ILessonService
             DurationMinutes = request.DurationMinutes,
             Price = request.Price,
             Status = request.Status,
+            IsPaid = request.IsPaid,
             Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(),
+            Homework = string.IsNullOrWhiteSpace(request.Homework) ? null : request.Homework.Trim(),
+            MaterialLinks = string.IsNullOrWhiteSpace(request.MaterialLinks) ? null : request.MaterialLinks.Trim(),
+            ProgressNote = string.IsNullOrWhiteSpace(request.ProgressNote) ? null : request.ProgressNote.Trim(),
             CreatedAt = DateTime.UtcNow
         };
 
         await _lessonRepository.AddAsync(lesson, cancellationToken);
         await _lessonRepository.SaveChangesAsync(cancellationToken);
-
         return Result.Ok();
     }
 
-    public async Task<Result<EditLessonModalDto>> GetEditLessonModalDataAsync(Guid teacherId, Guid lessonId, CancellationToken cancellationToken = default)
+    public async Task<Result<EditLessonModalDto>> GetEditLessonModalDataAsync(
+        Guid teacherId, Guid lessonId, CancellationToken cancellationToken = default)
     {
         var lesson = await _lessonRepository.GetLessonByIdAsync(lessonId, cancellationToken);
-        
         if (lesson == null) return Result<EditLessonModalDto>.Failure("Заняття не знайдено.");
-            
         if (lesson.TeacherId != teacherId) return Result<EditLessonModalDto>.Failure("Ви не маєте доступу до цього заняття.");
 
         var students = await _lessonRepository.GetActiveStudentsByTeacherIdAsync(teacherId, cancellationToken);
@@ -160,7 +128,11 @@ public sealed class LessonService : ILessonService
             Topic = lesson.Topic,
             Price = lesson.Price,
             Status = lesson.Status,
+            IsPaid = lesson.IsPaid,
             Notes = lesson.Notes,
+            Homework = lesson.Homework,
+            MaterialLinks = lesson.MaterialLinks,
+            ProgressNote = lesson.ProgressNote,
             Students = students.Select(x => new LessonStudentOptionDto
             {
                 StudentId = x.Id,
@@ -171,26 +143,25 @@ public sealed class LessonService : ILessonService
         return Result<EditLessonModalDto>.SuccessData(dto);
     }
 
-    public async Task<Result> EditLessonAsync(Guid teacherId, EditLessonRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result> EditLessonAsync(
+        Guid teacherId, EditLessonRequest request, CancellationToken cancellationToken = default)
     {
         var lesson = await _lessonRepository.GetLessonByIdAsync(request.LessonId, cancellationToken);
         if (lesson == null) return Result.Failure("Заняття не знайдено.");
         if (lesson.TeacherId != teacherId) return Result.Failure("Ви не маєте доступу до цього заняття.");
 
-        if (request.DurationMinutes <= 0) return Result.Failure("Тривалість має бути більшою за 0.");
-        if (string.IsNullOrWhiteSpace(request.Subject)) return Result.Failure("Предмет обов’язковий.");
+        if (request.DurationMinutes < _options.MinLessonDurationMinutes)
+            return Result.Failure($"Тривалість має бути не меншою за {_options.MinLessonDurationMinutes} хвилин.");
+        if (request.DurationMinutes > _options.MaxLessonDurationMinutes)
+            return Result.Failure($"Тривалість не може перевищувати {_options.MaxLessonDurationMinutes} хвилин.");
+        if (string.IsNullOrWhiteSpace(request.Subject))
+            return Result.Failure("Предмет обов'язковий.");
 
         var localScheduledAt = request.LessonDate.Date.Add(request.StartTime);
         var scheduledAt = DateTime.SpecifyKind(localScheduledAt, DateTimeKind.Utc);
 
         var hasConflict = await _lessonRepository.HasConflictAsync(
-            teacherId, 
-            request.StudentId, 
-            scheduledAt, 
-            request.DurationMinutes, 
-            lesson.Id, 
-            cancellationToken);
-
+            teacherId, request.StudentId, scheduledAt, request.DurationMinutes, lesson.Id, cancellationToken);
         if (hasConflict) return Result.Failure("На цей час уже є інше заняття.");
 
         lesson.StudentId = request.StudentId;
@@ -200,23 +171,26 @@ public sealed class LessonService : ILessonService
         lesson.Topic = string.IsNullOrWhiteSpace(request.Topic) ? null : request.Topic.Trim();
         lesson.Price = request.Price;
         lesson.Status = request.Status;
+        lesson.IsPaid = request.IsPaid;
         lesson.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
+        lesson.Homework = string.IsNullOrWhiteSpace(request.Homework) ? null : request.Homework.Trim();
+        lesson.MaterialLinks = string.IsNullOrWhiteSpace(request.MaterialLinks) ? null : request.MaterialLinks.Trim();
+        lesson.ProgressNote = string.IsNullOrWhiteSpace(request.ProgressNote) ? null : request.ProgressNote.Trim();
 
         await _lessonRepository.UpdateAsync(lesson, cancellationToken);
         await _lessonRepository.SaveChangesAsync(cancellationToken);
-
         return Result.Ok();
     }
-    public async Task<Result> DeleteLessonAsync(Guid teacherId, Guid lessonId, CancellationToken cancellationToken = default)
+
+    public async Task<Result> DeleteLessonAsync(
+        Guid teacherId, Guid lessonId, CancellationToken cancellationToken = default)
     {
-    var lesson = await _lessonRepository.GetLessonByIdAsync(lessonId, cancellationToken);
-    
-    if (lesson == null) return Result.Failure("Заняття не знайдено.");
-    if (lesson.TeacherId != teacherId) return Result.Failure("Ви не маєте доступу до цього заняття.");
+        var lesson = await _lessonRepository.GetLessonByIdAsync(lessonId, cancellationToken);
+        if (lesson == null) return Result.Failure("Заняття не знайдено.");
+        if (lesson.TeacherId != teacherId) return Result.Failure("Ви не маєте доступу до цього заняття.");
 
-    await _lessonRepository.DeleteAsync(lesson, cancellationToken);
-    await _lessonRepository.SaveChangesAsync(cancellationToken);
-
-    return Result.Ok();
+        await _lessonRepository.DeleteAsync(lesson, cancellationToken);
+        await _lessonRepository.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
     }
 }

@@ -1,33 +1,39 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Rodentia.Core.Entities; 
-using Rodentia.Data;           
-using Serilog;
-using Rodentia.Core.Interfaces; 
-using Rodentia.Core.Models;  
-using Rodentia.Core.Services;   
+using Rodentia.Core.Entities;
+using Rodentia.Core.Interfaces;
+using Rodentia.Core.Models;
+using Rodentia.Core.Services;
+using Rodentia.Data;
 using Rodentia.Data.Repositories;
-
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
     .WriteTo.Console()
     .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
     .WriteTo.Seq("http://localhost:5341")
     .CreateLogger();
 
-
 builder.Host.UseSerilog();
+
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
+builder.Services.Configure<RodentiaOptions>(
+    builder.Configuration.GetSection(RodentiaOptions.SectionName));
+
 
 if (builder.Environment.EnvironmentName != "Testing")
 {
-builder.Services.AddDbContext<RodentiaDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    builder.Services.AddDbContext<RodentiaDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 }
-
-
 
 builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 {
@@ -47,23 +53,19 @@ builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
+
 builder.Services.AddControllersWithViews();
 
-
 var app = builder.Build();
+
 if (!app.Environment.IsEnvironment("Testing"))
 {
-    using (var scope = app.Services.CreateScope())
+    using var scope = app.Services.CreateScope();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+    foreach (var role in new[] { "Teacher", "Student" })
     {
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-        var roles = new[] { "Teacher", "Student" };
-        foreach (var role in roles)
-        {
-            if (!await roleManager.RoleExistsAsync(role))
-            {
-                await roleManager.CreateAsync(new IdentityRole<Guid>(role));
-            }
-        }
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole<Guid>(role));
     }
 }
 
@@ -73,20 +75,23 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
 }
+else if (app.Environment.IsStaging())
+{
+    // Staging
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
 else
 {
-    app.UseExceptionHandler("/Home/Error"); 
+    // Production
+    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseRouting();
-
 app.UseAuthentication();
-
 app.UseAuthorization();
-
 app.MapStaticAssets();
 
 app.MapControllerRoute(
@@ -94,19 +99,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-    var roles = new[] { "Teacher", "Student" };
-
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole<Guid>(role));
-        }
-    }
-}
-
 app.Run();
+
 public partial class Program { }

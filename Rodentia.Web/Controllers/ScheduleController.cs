@@ -14,35 +14,25 @@ public class ScheduleController(ILessonService lessonService) : BaseController
     public async Task<IActionResult> Index(DateTime? date)
     {
         var referenceDate = date ?? DateTime.Today;
-        
         int diff = (7 + (referenceDate.DayOfWeek - DayOfWeek.Monday)) % 7;
         var startOfWeek = referenceDate.AddDays(-1 * diff).Date;
 
         ViewBag.StartOfWeek = startOfWeek;
         ViewBag.SelectedDate = referenceDate.ToString("yyyy-MM-dd");
-        
+
         var result = await lessonService.GetScheduleAsync(CurrentUserId);
-
         if (!result.IsSuccess)
-        {
             return View("Error", result.ErrorMessage);
-        }
 
-        ViewBag.StartOfWeek = startOfWeek;
         return View(result.Data);
     }
 
     [HttpGet]
     public async Task<IActionResult> CreateLessonModal(CancellationToken cancellationToken)
     {
-        var result = await lessonService.GetCreateLessonModalDataAsync(
-            CurrentUserId,
-            cancellationToken);
-
+        var result = await lessonService.GetCreateLessonModalDataAsync(CurrentUserId, cancellationToken);
         if (!result.IsSuccess || result.Data is null)
-        {
             return BadRequest(result.ErrorMessage ?? "Не вдалося отримати дані створення заняття.");
-        }
 
         var vm = new CreateLessonModalViewModel
         {
@@ -50,11 +40,7 @@ public class ScheduleController(ILessonService lessonService) : BaseController
             DurationMinutes = result.Data.DefaultDurationMinutes,
             Status = result.Data.DefaultStatus,
             StudentOptions = result.Data.Students
-                .Select(x => new SelectListItem
-                {
-                    Value = x.StudentId.ToString(),
-                    Text = x.FullName
-                })
+                .Select(x => new SelectListItem { Value = x.StudentId.ToString(), Text = x.FullName })
                 .ToList()
         };
 
@@ -68,9 +54,7 @@ public class ScheduleController(ILessonService lessonService) : BaseController
         CancellationToken cancellationToken)
     {
         if (!TimeSpan.TryParse(model.StartTime, out var startTime))
-        {
             ModelState.AddModelError(nameof(model.StartTime), "Некоректний формат часу.");
-        }
 
         if (!ModelState.IsValid)
         {
@@ -94,39 +78,27 @@ public class ScheduleController(ILessonService lessonService) : BaseController
             Topic = model.Topic,
             Price = model.Price,
             Status = model.Status,
-            Notes = model.Notes
+            IsPaid = model.IsPaid,         
+            Notes = model.Notes,
+            Homework = model.Homework,        
+            MaterialLinks = model.MaterialLinks,   
+            ProgressNote = model.ProgressNote     
         };
 
-        var result = await lessonService.CreateLessonAsync(
-            CurrentUserId,
-            request,
-            cancellationToken);
+        var result = await lessonService.CreateLessonAsync(CurrentUserId, request, cancellationToken);
 
         if (!result.IsSuccess)
-        {
-            return BadRequest(new
-            {
-                message = result.ErrorMessage ?? "Не вдалося створити заняття."
-            });
-        }
+            return BadRequest(new { message = result.ErrorMessage ?? "Не вдалося створити заняття." });
 
-        return Ok(new
-        {
-            message = "Заняття створено."
-        });
+        return Ok(new { message = "Заняття створено." });
     }
-
-
 
     [HttpGet]
     public async Task<IActionResult> EditLessonModal(Guid lessonId, CancellationToken cancellationToken)
     {
         var result = await lessonService.GetEditLessonModalDataAsync(CurrentUserId, lessonId, cancellationToken);
-        
         if (!result.IsSuccess || result.Data is null)
-        {
             return BadRequest(result.ErrorMessage ?? "Не вдалося отримати дані для редагування заняття.");
-        }
 
         var vm = new EditLessonModalViewModel
         {
@@ -139,12 +111,14 @@ public class ScheduleController(ILessonService lessonService) : BaseController
             Topic = result.Data.Topic,
             Price = result.Data.Price,
             Status = result.Data.Status,
+            IsPaid = result.Data.IsPaid,          
             Notes = result.Data.Notes,
-            StudentOptions = result.Data.Students.Select(x => new SelectListItem
-            {
-                Value = x.StudentId.ToString(),
-                Text = x.FullName
-            }).ToList()
+            Homework = result.Data.Homework,        
+            MaterialLinks = result.Data.MaterialLinks,   
+            ProgressNote = result.Data.ProgressNote,    
+            StudentOptions = result.Data.Students
+                .Select(x => new SelectListItem { Value = x.StudentId.ToString(), Text = x.FullName })
+                .ToList()
         };
 
         return PartialView("_EditLessonModal", vm);
@@ -152,18 +126,18 @@ public class ScheduleController(ILessonService lessonService) : BaseController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditLesson(EditLessonModalViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> EditLesson(
+        EditLessonModalViewModel model,
+        CancellationToken cancellationToken)
     {
         if (!TimeSpan.TryParse(model.StartTime, out var startTime))
-        {
             ModelState.AddModelError(nameof(model.StartTime), "Некоректний формат часу.");
-        }
 
         if (!ModelState.IsValid)
         {
-            return BadRequest(new 
-            { 
-                message = "Перевірте поля форми.", 
+            return BadRequest(new
+            {
+                message = "Перевірте поля форми.",
                 errors = ModelState.Values
                     .SelectMany(x => x.Errors)
                     .Select(x => x.ErrorMessage)
@@ -182,34 +156,28 @@ public class ScheduleController(ILessonService lessonService) : BaseController
             Topic = model.Topic,
             Price = model.Price,
             Status = model.Status,
-            Notes = model.Notes
+            IsPaid = model.IsPaid,          
+            Notes = model.Notes,
+            Homework = model.Homework,        
+            MaterialLinks = model.MaterialLinks,   
+            ProgressNote = model.ProgressNote     
         };
 
         var result = await lessonService.EditLessonAsync(CurrentUserId, request, cancellationToken);
-        
-        if (!result.IsSuccess) 
-        {
-            return BadRequest(new 
-            { 
-                message = result.ErrorMessage ?? "Не вдалося оновити заняття." 
-            });
-        }
 
-        return Ok(new 
-        { 
-            message = "Заняття успішно оновлено." 
-        });
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage ?? "Не вдалося оновити заняття." });
+
+        return Ok(new { message = "Заняття успішно оновлено." });
     }
 
     [HttpPost]
     public async Task<IActionResult> DeleteLesson(Guid lessonId, CancellationToken cancellationToken)
     {
         var result = await lessonService.DeleteLessonAsync(CurrentUserId, lessonId, cancellationToken);
-        
-        if (!result.IsSuccess) 
-        {
+
+        if (!result.IsSuccess)
             return BadRequest(new { message = result.ErrorMessage ?? "Не вдалося видалити заняття." });
-        }
 
         return Ok(new { message = "Заняття успішно видалено." });
     }

@@ -19,10 +19,10 @@ public sealed class CreateLessonModalViewModel
     public string StartTime { get; set; } = "09:00";
 
     [Range(1, 600, ErrorMessage = "Тривалість має бути від 1 до 600 хв.")]
-    [Display(Name = "Тривалість")]
+    [Display(Name = "Тривалість (хв)")]
     public int DurationMinutes { get; set; } = 60;
 
-    [Required(ErrorMessage = "Предмет обов’язковий.")]
+    [Required(ErrorMessage = "Предмет обов'язковий.")]
     [Display(Name = "Предмет")]
     public string Subject { get; set; } = "Математика";
 
@@ -33,11 +33,23 @@ public sealed class CreateLessonModalViewModel
     [Display(Name = "Ціна")]
     public decimal Price { get; set; }
 
-    [Display(Name = "Статус")]
+    [Display(Name = "Статус заняття")]
     public LessonStatus Status { get; set; } = LessonStatus.Scheduled;
+
+    [Display(Name = "Оплачено")]
+    public bool IsPaid { get; set; } = false;
 
     [Display(Name = "Нотатки")]
     public string Notes { get; set; }
+
+    [Display(Name = "Домашнє завдання")]
+    public string Homework { get; set; }
+
+    [Display(Name = "Матеріали та посилання")]
+    public string MaterialLinks { get; set; }
+
+    [Display(Name = "Успіхи та проблеми учня")]
+    public string ProgressNote { get; set; }
 
     public List<SelectListItem> StudentOptions { get; set; } = [];
 }

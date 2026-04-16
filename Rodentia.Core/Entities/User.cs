@@ -1,7 +1,5 @@
 #nullable enable
 
-using System.ComponentModel.DataAnnotations;
-
 using Microsoft.AspNetCore.Identity;
 
 namespace Rodentia.Core.Entities;
@@ -15,6 +13,8 @@ public class User : IdentityUser<Guid>
     public UserRole Role { get; set; }
 
     public string? UniqueCode { get; set; }
+
+    public string? AvatarPath { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

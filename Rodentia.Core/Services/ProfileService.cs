@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
 using Rodentia.Core.Models;
@@ -31,9 +25,7 @@ public sealed class ProfileService : IProfileService
     {
         var user = await _profileRepository.GetByIdAsync(currentUserId, cancellationToken);
         if (user is null)
-        {
             return Result<OwnProfileDto>.Failure("Користувача не знайдено.");
-        }
 
         var dto = new OwnProfileDto
         {
@@ -43,6 +35,7 @@ public sealed class ProfileService : IProfileService
             Email = user.Email ?? string.Empty,
             PhoneNumber = user.PhoneNumber,
             RoleLabel = MapRoleLabel(user.Role),
+            AvatarPath = user.AvatarPath,
             StudentCode = user.Role == UserRole.Student
                 ? BuildStudentCode(user.Id)
                 : null
@@ -52,15 +45,13 @@ public sealed class ProfileService : IProfileService
     }
 
     public async Task<Result> UpdateOwnProfileAsync(
-    Guid currentUserId,
-    UpdateOwnProfileRequest request,
-    CancellationToken cancellationToken = default)
+        Guid currentUserId,
+        UpdateOwnProfileRequest request,
+        CancellationToken cancellationToken = default)
     {
         var user = await _profileRepository.GetByIdAsync(currentUserId, cancellationToken);
         if (user is null)
-        {
             return Result.Failure("Користувача не знайдено.");
-        }
 
         var firstName = request.FirstName.Trim();
         var lastName = request.LastName.Trim();
@@ -68,19 +59,11 @@ public sealed class ProfileService : IProfileService
         var phoneNumber = request.PhoneNumber?.Trim();
 
         if (string.IsNullOrWhiteSpace(firstName))
-        {
             return Result.Failure("Імʼя обовʼязкове.");
-        }
-
         if (string.IsNullOrWhiteSpace(lastName))
-        {
             return Result.Failure("Прізвище обовʼязкове.");
-        }
-
         if (string.IsNullOrWhiteSpace(email))
-        {
             return Result.Failure("Email обовʼязковий.");
-        }
 
         user.FirstName = firstName;
         user.LastName = lastName;
@@ -89,68 +72,47 @@ public sealed class ProfileService : IProfileService
         user.PhoneNumber = phoneNumber;
         user.UpdatedAt = DateTime.UtcNow;
 
+        if (!string.IsNullOrWhiteSpace(request.AvatarPath))
+            user.AvatarPath = request.AvatarPath;
+
         var updateResult = await _profileRepository.UpdateAsync(user);
         if (!updateResult.Succeeded)
-        {
             return Result.Failure(JoinIdentityErrors(updateResult.Errors));
-        }
 
         var currentPassword = request.CurrentPassword?.Trim();
         var newPassword = request.NewPassword?.Trim();
+        var hasOld = !string.IsNullOrWhiteSpace(currentPassword);
+        var hasNew = !string.IsNullOrWhiteSpace(newPassword);
 
-        var hasCurrentPassword = !string.IsNullOrWhiteSpace(currentPassword);
-        var hasNewPassword = !string.IsNullOrWhiteSpace(newPassword);
+        if (hasOld && !hasNew) { hasOld = false; currentPassword = null; }
 
-        if (hasCurrentPassword && !hasNewPassword)
-        {
-            hasCurrentPassword = false;
-            currentPassword = null;
-        }
-
-        if (!hasCurrentPassword && hasNewPassword)
-        {
+        if (!hasOld && hasNew)
             return Result.Failure("Для зміни пароля треба заповнити і старий, і новий пароль.");
-        }
 
-        if (hasCurrentPassword && hasNewPassword)
+        if (hasOld && hasNew)
         {
             var passwordResult = await _profileRepository.ChangePasswordAsync(
-                user,
-                currentPassword!,
-                newPassword!);
-
+                user, currentPassword!, newPassword!);
             if (!passwordResult.Succeeded)
-            {
                 return Result.Failure(JoinIdentityErrors(passwordResult.Errors));
-            }
         }
 
         _logger.LogInformation("User profile updated. UserId: {UserId}", user.Id);
-
         return Result.Ok();
     }
 
-    private static string MapRoleLabel(UserRole role)
+    private static string MapRoleLabel(UserRole role) => role switch
     {
-        return role switch
-        {
-            UserRole.Teacher => "Викладач",
-            UserRole.Student => "Учень",
-            _ => role.ToString()
-        };
-    }
+        UserRole.Teacher => "Викладач",
+        UserRole.Student => "Учень",
+        _ => role.ToString()
+    };
 
-    private static string BuildStudentCode(Guid userId)
-    {
-        return $"#{userId.ToString("N")[..6].ToUpperInvariant()}";
-    }
+    private static string BuildStudentCode(Guid userId) =>
+        $"#{userId.ToString("N")[..6].ToUpperInvariant()}";
 
-    private static string JoinIdentityErrors(IEnumerable<Microsoft.AspNetCore.Identity.IdentityError> errors)
-    {
-        var messages = errors
-            .Select(x => x.Description)
-            .Where(x => !string.IsNullOrWhiteSpace(x));
-
-        return string.Join(' ', messages);
-    }
+    private static string JoinIdentityErrors(
+        IEnumerable<Microsoft.AspNetCore.Identity.IdentityError> errors) =>
+        string.Join(' ', errors.Select(x => x.Description)
+            .Where(x => !string.IsNullOrWhiteSpace(x)));
 }

@@ -6,21 +6,43 @@
             <span>Налаштування профілю</span>
             <button type="button" class="profile-modal-close" data-profile-close>&times;</button>
         </div>
-
         <form id="own-profile-form"
               asp-controller="Profiles"
               asp-action="UpdateOwnProfile"
               method="post"
+              enctype="multipart/form-data"
               autocomplete="off">
             @Html.AntiForgeryToken()
-
             <div class="profile-modal-body">
                 <div class="profile-modal-left">
-                    <div class="profile-avatar-placeholder"></div>
 
-                    <a href="#" class="profile-photo-link" onclick="return false;">Змінити фото</a>
+                    <div class="profile-avatar-wrapper mb-2">
+                        @if (!string.IsNullOrWhiteSpace(Model.AvatarPath))
+                        {
+                            <img id="profile-avatar-img"
+                                 src="@Model.AvatarPath"
+                                 alt="Фото профілю"
+                                 class="profile-avatar-img" />
+                        }
+                        else
+                        {
+                            <div id="profile-avatar-placeholder" class="profile-avatar-placeholder">
+                                <img id="profile-avatar-img" src="" alt=""
+                                     class="profile-avatar-img d-none" />
+                            </div>
+                        }
+                    </div>
 
-                    <div class="profile-user-label">
+                    <input type="file"
+                           id="avatar-file-input"
+                           name="AvatarFile"
+                           accept="image/jpeg,image/png,image/webp"
+                           class="d-none" />
+
+                    <a href="#" class="profile-photo-link" id="avatar-change-link">Змінити фото</a>
+                    <div id="avatar-preview-status" class="small mt-1 text-muted"></div>
+
+                    <div class="profile-user-label mt-2">
                         @Model.FirstName (@Model.RoleLabel)
                     </div>
 
@@ -38,31 +60,28 @@
                         <label asp-for="FirstName" class="form-label"></label>
                         <input asp-for="FirstName" class="form-control" />
                     </div>
-
                     <div class="mb-2">
                         <label asp-for="LastName" class="form-label"></label>
                         <input asp-for="LastName" class="form-control" />
                     </div>
-
                     <div class="mb-2">
                         <label asp-for="Email" class="form-label"></label>
                         <input asp-for="Email" class="form-control" />
                     </div>
-
                     <div class="mb-3">
                         <label asp-for="PhoneNumber" class="form-label"></label>
                         <input asp-for="PhoneNumber" class="form-control" />
                     </div>
-
                     <div class="profile-password-box">
                         <div class="mb-2">
                             <label asp-for="CurrentPassword" class="form-label"></label>
-                            <input asp-for="CurrentPassword" class="form-control" autocomplete="off" />
+                            <input asp-for="CurrentPassword" type="password"
+                                   class="form-control" autocomplete="off" />
                         </div>
-
                         <div>
                             <label asp-for="NewPassword" class="form-label"></label>
-                            <input asp-for="NewPassword" class="form-control" autocomplete="new-password" />
+                            <input asp-for="NewPassword" type="password"
+                                   class="form-control" autocomplete="new-password" />
                         </div>
                     </div>
                 </div>

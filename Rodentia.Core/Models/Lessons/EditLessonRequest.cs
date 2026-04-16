@@ -1,3 +1,5 @@
+using Rodentia.Core.Entities;
+
 namespace Rodentia.Core.Models.Lessons;
 
 public sealed class EditLessonRequest
@@ -10,6 +12,10 @@ public sealed class EditLessonRequest
     public string Subject { get; set; } = string.Empty;
     public string Topic { get; set; }
     public decimal Price { get; set; }
-    public Entities.LessonStatus Status { get; set; }
+    public LessonStatus Status { get; set; }
+    public bool IsPaid { get; set; }
     public string Notes { get; set; }
+    public string Homework { get; set; }
+    public string MaterialLinks { get; set; }
+    public string ProgressNote { get; set; }
 }
