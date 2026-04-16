@@ -1,0 +1,107 @@
+@model Rodentia.Core.Models.Profiles.StudentProfileDto
+@{
+    var initials = $"{Model.FirstName.FirstOrDefault()}{Model.LastName.FirstOrDefault()}".ToUpper();
+}
+
+<div class="modal-header" style="background-color: #ff9800; border: none; padding: 12px 20px;">
+    <h5 class="modal-title" style="color: white; font-weight: 600; margin: 0; font-size: 16px;">Профіль учня</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="filter: brightness(0.8);"></button>
+</div>
+
+<div class="modal-body" style="background-color: #faf6f1; padding: 20px;">
+    <div style="display: flex; gap: 20px; align-items: flex-start;">
+        <!-- Аватар зліва -->
+        <div style="flex: 0 0 auto;">
+            @if (!string.IsNullOrWhiteSpace(Model.AvatarPath))
+            {
+                <img src="@Model.AvatarPath" alt="Фото профілю" 
+                     style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover;" />
+            }
+            else
+            {
+                <div style="width: 70px; height: 70px; border-radius: 50%; background-color: #ff9800; 
+                            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+                            font-size: 24px; font-weight: 600; color: white;">
+                    @initials
+                </div>
+            }
+        </div>
+
+        <!-- Інформація справа -->
+        <div style="flex: 1;">
+            <!-- Ім'я та Прізвище -->
+            <div style="font-size: 24px; font-weight: 600; color: #333; margin-bottom: 2px;">
+                @Model.FirstName @Model.LastName
+            </div>
+
+            <!-- Роль -->
+            <div style="font-size: 16px; color: #999; margin-bottom: 15px;">
+                Учень
+            </div>
+
+            <!-- 2 колони інформації -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Ліва колона -->
+                <div>
+                    <!-- Email -->
+                    @if (!string.IsNullOrEmpty(Model.Email))
+                    {
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: 500;">Email</div>
+                            <div style="font-size: 16px; color: #ff9800;">
+                                @Model.Email
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Код учня -->
+                    @if (!string.IsNullOrEmpty(Model.StudentCode))
+                    {
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: 500;">Код учня</div>
+                            <div style="display: inline-block; background-color: white; border: 1px solid #e8d5c4; 
+                                        padding: 6px 12px; border-radius: 4px; font-size: 16px; color: #e8134e; font-weight: 600;">
+                                @Model.StudentCode
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Права колона -->
+                <div>
+                    <!-- Клас -->
+                    @if (!string.IsNullOrEmpty(Model.StudentClass))
+                    {
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: 500;">Клас</div>
+                            <div style="font-size: 16px; color: #333; font-weight: 500;">
+                                @Model.StudentClass
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Номер телефону -->
+                    @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                    {
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: #999; margin-bottom: 4px; text-transform: uppercase; font-weight: 500;">Номер телефону</div>
+                            <div style="font-size: 16px; color: #333;">
+                                <a href="tel:@Model.PhoneNumber" style="color: #333; text-decoration: none;">
+                                    @Model.PhoneNumber
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer" style="background-color: #faf6f1; border-top: 1px solid #e8d5c4; padding: 15px 20px; justify-content: flex-end;">
+    <button type="button" class="btn" style="background-color: #ff9800; color: white; border: none; padding: 10px 28px; border-radius: 4px; font-weight: 500; font-size: 14px;" data-bs-dismiss="modal">
+        Закрити
+    </button>
+</div>
+
+

@@ -31,4 +31,7 @@ public sealed class OwnProfileModalViewModel
     public string StudentCode { get; set; }
     public bool ShowStudentCode => !string.IsNullOrWhiteSpace(StudentCode);
     public string AvatarPath { get; set; }
+
+    [Display(Name = "Клас")]
+    public string StudentClass { get; set; }
 }

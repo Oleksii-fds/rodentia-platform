@@ -42,6 +42,7 @@ public sealed class ProfilesController : BaseController
             PhoneNumber = result.Data.PhoneNumber,
             RoleLabel = result.Data.RoleLabel,
             StudentCode = result.Data.StudentCode,
+            StudentClass = result.Data.StudentClass,
             AvatarPath = result.Data.AvatarPath
         };
 
@@ -87,7 +88,8 @@ public sealed class ProfilesController : BaseController
             PhoneNumber = model.PhoneNumber,
             CurrentPassword = model.CurrentPassword,
             NewPassword = model.NewPassword,
-            AvatarPath = newAvatarPath
+            AvatarPath = newAvatarPath,
+            StudentClass = model.StudentClass
         };
 
         var result = await _profileService.UpdateOwnProfileAsync(
@@ -120,5 +122,15 @@ public sealed class ProfilesController : BaseController
 
         if (newAvatarPath is not null)
             await ReplaceClaim("AvatarPath", newAvatarPath);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> StudentProfile(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _profileService.GetStudentProfileAsync(id, cancellationToken);
+        if (!result.IsSuccess || result.Data is null)
+            return NotFound();
+
+        return PartialView("_StudentProfileModal", result.Data);
     }
 }

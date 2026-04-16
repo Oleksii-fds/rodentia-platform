@@ -26,6 +26,13 @@
     </div>
 </div>
 
+<div class="modal fade" id="studentProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" id="studentProfileContent">
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center my-4">
         <h2 class="fw-bold m-0">Мої учні</h2>
@@ -86,7 +93,11 @@
                             {
                                 <tr>
                                     <td class="ps-4 py-3 fw-bold">
-                                        @student.LastName @student.FirstName
+                                        <button type="button" 
+                                                class="btn btn-link text-dark text-decoration-none p-0 fw-bold"
+                                                onclick="viewStudentProfile('@student.Id')">
+                                            @student.LastName @student.FirstName
+                                        </button>
                                     </td>
                                     <td>@student.Email</td>
                                     <td>
@@ -114,5 +125,20 @@
         document.getElementById('removeStudentId').value = studentId;
         document.getElementById('removeStudentName').textContent = studentName;
         new bootstrap.Modal(document.getElementById('removeStudentModal')).show();
+    }
+
+    function viewStudentProfile(studentId) {
+        fetch(`/Profiles/StudentProfile?id=${studentId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Не вдалося завантажити профіль');
+                return response.text();
+            })
+            .then(html => {
+                document.getElementById('studentProfileContent').innerHTML = html;
+                new bootstrap.Modal(document.getElementById('studentProfileModal')).show();
+            })
+            .catch(error => {
+                alert('Помилка: ' + error.message);
+            });
     }
 </script>
