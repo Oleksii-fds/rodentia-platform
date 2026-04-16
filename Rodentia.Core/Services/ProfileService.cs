@@ -37,7 +37,7 @@ public sealed class ProfileService : IProfileService
             RoleLabel = MapRoleLabel(user.Role),
             AvatarPath = user.AvatarPath,
             StudentCode = user.Role == UserRole.Student
-                ? BuildStudentCode(user.Id)
+                ? user.UniqueCode
                 : null
         };
 
@@ -107,9 +107,6 @@ public sealed class ProfileService : IProfileService
         UserRole.Student => "Учень",
         _ => role.ToString()
     };
-
-    private static string BuildStudentCode(Guid userId) =>
-        $"#{userId.ToString("N")[..6].ToUpperInvariant()}";
 
     private static string JoinIdentityErrors(
         IEnumerable<Microsoft.AspNetCore.Identity.IdentityError> errors) =>

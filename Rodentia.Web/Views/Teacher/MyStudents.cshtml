@@ -3,17 +3,61 @@
     ViewData["Title"] = "Мої учні";
 }
 
+<div class="modal fade" id="removeStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header" style="background:#f4b667; border-bottom:1px solid #e8a142;">
+                <h5 class="modal-title fw-bold">Підтвердження</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                Ви впевнені, що хочете видалити учня
+                <strong id="removeStudentName"></strong> зі списку?
+            </div>
+            <div class="modal-footer" style="background:#f5efe4; border-top:1px solid #e8a142;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                <form id="removeStudentForm" asp-action="RemoveStudent" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="removeStudentId" name="studentId" value="" />
+                    <button type="submit" class="btn btn-danger">Видалити</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center my-4">
         <h2 class="fw-bold m-0">Мої учні</h2>
-        
+
         <form asp-controller="Teacher" asp-action="AddStudent" method="post" class="d-flex gap-2">
-            <input name="identifier" class="form-control" placeholder="Email або код учня..." style="width: 280px; border-radius: 10px;" required />
-            <button type="submit" class="btn btn-warning text-white fw-bold px-4" style="border-radius: 10px;">
+            <input name="identifier"
+                   class="form-control"
+                   placeholder="Email або код учня..."
+                   style="width: 280px; border-radius: 10px;"
+                   required />
+            <button type="submit"
+                    class="btn btn-warning text-white fw-bold px-4"
+                    style="border-radius: 10px;">
                 Додати учня
             </button>
         </form>
     </div>
+
+    @if (TempData["Success"] is string success)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @success
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @error
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
     <div class="card border-0 shadow-sm" style="border-radius: 15px;">
         <div class="card-body p-0">
@@ -41,20 +85,19 @@
                             @foreach (var student in Model)
                             {
                                 <tr>
-                                    <td class="ps-4 py-3 fw-bold">@student.FirstName @student.LastName</td>
+                                    <td class="ps-4 py-3 fw-bold">
+                                        @student.LastName @student.FirstName
+                                    </td>
                                     <td>@student.Email</td>
                                     <td>
-                                        <span class="badge bg-light text-dark border px-2 py-1">
-                                            @student.UniqueCode
-                                        </span>
+                                        <code class="text-dark fw-semibold">@student.UniqueCode</code>
                                     </td>
                                     <td class="text-end pe-4">
-                                        <form asp-action="RemoveStudent" method="post">
-                                            <input type="hidden" name="studentId" value="@student.Id" />
-                                            <button type="submit" class="btn btn-outline-danger btn-sm border-0">
-                                                <i class="bi bi-trash-fill fs-5"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button"
+                                                class="btn btn-outline-danger btn-sm border-0"
+                                                onclick="confirmRemove('@student.Id', '@student.LastName @student.FirstName')">
+                                            <i class="bi bi-trash-fill fs-5"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             }
@@ -65,3 +108,11 @@
         </div>
     </div>
 </div>
+
+<script>
+    function confirmRemove(studentId, studentName) {
+        document.getElementById('removeStudentId').value = studentId;
+        document.getElementById('removeStudentName').textContent = studentName;
+        new bootstrap.Modal(document.getElementById('removeStudentModal')).show();
+    }
+</script>

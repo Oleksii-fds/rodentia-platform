@@ -8,56 +8,124 @@
     <link rel="stylesheet" href="~/css/profile-modal.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        :root { --rodentia-orange: #FF6B00; --rodentia-light: #FFF8F4; }
-        body { background-color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .sidebar { width: 200px; height: 100vh; position: fixed; border-right: 1px solid #eee; padding: 20px; }
-        .main-content { margin-left: 200px; padding: 20px; background-color: white; min-height: 100vh; }
-        .nav-link.active-orange { background-color: var(--rodentia-orange) !important; color: white !important; border-radius: 8px; }
-        .nav-link { color: #333; margin-bottom: 10px; font-weight: 500; }
-        .logo-text { color: var(--rodentia-orange); font-size: 24px; font-weight: 800; margin-bottom: 30px; }
+        :root {
+            --rodentia-orange: #FF6B00;
+            --rodentia-light: #FFF8F4;
+        }
+
+        body {
+            background-color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .sidebar {
+            width: 200px;
+            height: 100vh;
+            position: fixed;
+            border-right: 1px solid #eee;
+            padding: 20px;
+        }
+
+        .main-content {
+            margin-left: 200px;
+            padding: 20px;
+            background-color: white;
+            min-height: 100vh;
+        }
+
+        .nav-link.active-orange {
+            background-color: var(--rodentia-orange) !important;
+            color: white !important;
+            border-radius: 8px;
+        }
+
+        .nav-link {
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .logo-text {
+            color: var(--rodentia-orange);
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 30px;
+        }
+
+        .navbar-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #eee;
+        }
+
+        .navbar-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="logo-text">Rodentia</div>
         <nav class="nav flex-column">
-            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Schedule" ? "active-orange" : "")" 
-            asp-controller="Schedule" asp-action="Index">
+            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Schedule" ? "active-orange" : "")"
+               asp-controller="Schedule" asp-action="Index">
                 <i class="bi bi-calendar3 me-2"></i> Розклад
             </a>
-
             @if (User.IsInRole("Teacher"))
             {
-                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Teacher" ? "active-orange" : "")" 
-                asp-controller="Teacher" asp-action="MyStudents">
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Teacher" ? "active-orange" : "")"
+                   asp-controller="Teacher" asp-action="MyStudents">
                     <i class="bi bi-people me-2"></i> Мої учні
                 </a>
             }
-
-            <a class="nav-link" href="#"><i class="bi bi-clock-history me-2"></i> Історія занять</a>
         </nav>
     </div>
 
     <div class="main-content">
         <header class="d-flex justify-content-end align-items-center mb-4 p-2">
-            <div class="d-flex align-items-center me-3 text-end">
-                <div class="me-2">
-                    <div class="fw-bold">
-                    @User.Identity?.Name 
-                    (@(User.IsInRole("Teacher") ? "Викладач" : "Учень"))
-                </div>
-                    <small class="text-muted">@User.Identity?.Name</small>
-                </div>
-                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 40px; height: 40px;">
-                    @(User.Identity?.Name?[0].ToString().ToUpper() ?? "?")
-                </div>
+            @{
+                var firstName = User.FindFirst("FirstName")?.Value ?? "";
+                var lastName = User.FindFirst("LastName")?.Value ?? "";
+                var avatarPath = User.FindFirst("AvatarPath")?.Value;
+                var displayName = string.IsNullOrWhiteSpace($"{firstName} {lastName}".Trim())
+                ? User.Identity?.Name
+                : $"{firstName} {lastName}".Trim();
+                var roleLabel = User.IsInRole("Teacher") ? "Викладач" : "Учень";
+                var initial = (!string.IsNullOrWhiteSpace(firstName) ? firstName[0] : User.Identity?.Name?[0] ?? '?').ToString().ToUpper();
+            }
 
+            <div class="d-flex align-items-center gap-2 me-3">
+                @if (!string.IsNullOrWhiteSpace(avatarPath))
+                {
+                    <img src="@avatarPath" alt="Аватар" class="navbar-avatar" />
+                }
+                else
+                {
+                    <div class="navbar-avatar-placeholder">@initial</div>
+                }
+
+                <div class="text-end">
+                    <div class="fw-bold lh-1">@displayName</div>
+                    <small class="text-muted">@roleLabel</small>
+                </div>
             </div>
-            
+
             <button type="button" id="open-profile-modal" class="btn btn-warning me-2">
                 Профіль
             </button>
-            
+
             <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn btn-light border">Вихід</button>
@@ -69,7 +137,9 @@
         <main role="main">
             @RenderBody()
         </main>
-    </div> <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/profile-modal.js" asp-append-version="true"></script>
 </body>
