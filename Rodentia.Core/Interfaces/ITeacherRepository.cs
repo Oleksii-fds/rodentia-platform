@@ -8,4 +8,9 @@ public interface ITeacherRepository
     Task<bool> LinkExistsAsync(Guid teacherId, Guid studentId);
     Task AddLinkAsync(TeacherStudentLink link);
     Task RemoveLinkAsync(Guid teacherId, Guid studentId);
+
+    Task<Lesson> GetLessonForTeacherAsync(Guid teacherId, Guid lessonId);
+    Task SaveChangesAsync();
+
+    Task<IEnumerable<Lesson>> GetUnpaidLessonsByTeacherAsync(Guid teacherId);
 }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
 using Rodentia.Core.Models;
+using Rodentia.Core.Models.Teacher;
 
 namespace Rodentia.Core.Services;
 
@@ -61,5 +62,73 @@ public class TeacherService : ITeacherService
     {
         await _teacherRepository.RemoveLinkAsync(teacherId, studentId);
         return Result.Ok();
+    }
+    public async Task<Result> ConfirmPaymentAsync(Guid teacherId, Guid lessonId)
+    {
+        var lesson = await _teacherRepository.GetLessonForTeacherAsync(teacherId, lessonId);
+
+        if (lesson is null)
+            return Result.Failure("Заняття не знайдено.");
+
+        if (lesson.IsPaid)
+            return Result.Failure("Заняття вже відмічено як оплачене.");
+
+        lesson.IsPaid = true;
+        await _teacherRepository.SaveChangesAsync();
+
+        return Result.Ok();
+    }
+
+    public async Task<Result<DebtAnalysisDto>> GetDebtAnalysisAsync(Guid teacherId)
+    {
+        var unpaidLessons = (await _teacherRepository
+            .GetUnpaidLessonsByTeacherAsync(teacherId))
+            .ToList();
+
+        if (!unpaidLessons.Any())
+        {
+            return Result<DebtAnalysisDto>.SuccessData(new DebtAnalysisDto
+            {
+                TotalDebt = 0,
+                Students = []
+            });
+        }
+
+        var studentIds = unpaidLessons.Select(l => l.StudentId).Distinct().ToList();
+        var students = await _userManager.Users
+            .Where(u => studentIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id);
+
+        var studentDebts = unpaidLessons
+            .GroupBy(l => l.StudentId)
+            .Select(g =>
+            {
+                students.TryGetValue(g.Key, out var student);
+                return new StudentDebtDto
+                {
+                    StudentId = g.Key,
+                    FullName = student is not null
+                        ? $"{student.FirstName} {student.LastName}".Trim()
+                        : "Невідомий",
+                    TotalDebt = g.Sum(l => l.Price),
+                    UnpaidLessonsCount = g.Count(),
+                    UnpaidLessons = g.Select(l => new UnpaidLessonDto
+                    {
+                        LessonId = l.Id,
+                        ScheduledAt = l.ScheduledAt,
+                        Subject = l.Subject,
+                        Topic = l.Topic,
+                        Price = l.Price
+                    }).ToList()
+                };
+            })
+            .OrderByDescending(s => s.TotalDebt)
+            .ToList();
+
+        return Result<DebtAnalysisDto>.SuccessData(new DebtAnalysisDto
+        {
+            TotalDebt = studentDebts.Sum(s => s.TotalDebt),
+            Students = studentDebts
+        });
     }
 }

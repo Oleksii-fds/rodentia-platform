@@ -44,4 +44,28 @@ public class TeacherRepository : ITeacherRepository
             await _db.SaveChangesAsync();
         }
     }
+
+    public async Task<Lesson> GetLessonForTeacherAsync(Guid teacherId, Guid lessonId)
+    {
+        return await _db.Lessons
+            .FirstOrDefaultAsync(l => l.Id == lessonId && l.TeacherId == teacherId);
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Lesson>> GetUnpaidLessonsByTeacherAsync(Guid teacherId)
+    {
+        return await _db.Lessons
+            .Where(l =>
+                l.TeacherId == teacherId &&
+                !l.IsPaid &&
+                l.Status != LessonStatus.Canceled &&
+                l.Price > 0)
+            .OrderBy(l => l.StudentId)
+            .ThenBy(l => l.ScheduledAt)
+            .ToListAsync();
+    }
 }

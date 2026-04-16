@@ -61,9 +61,25 @@
                             <option value="@((int)LessonStatus.Canceled)">Скасовано</option>
                         </select>
                     </div>
-                    <div class="col-md-4 d-flex align-items-center gap-2 pt-4">
-                        <input asp-for="IsPaid" type="checkbox" class="form-check-input" id="edit-is-paid" />
-                        <label class="form-check-label fw-semibold" for="edit-is-paid">Оплачено</label>
+                    <div class="col-md-4 d-flex align-items-center pt-3">
+                        <input asp-for="IsPaid" type="checkbox" id="edit-is-paid-checkbox" class="d-none" />
+                        <button type="button"
+                                id="edit-is-paid-btn"
+                                class="btn w-100 @(Model.IsPaid ? "btn-success" : "btn-outline-secondary")"
+                                onclick="toggleIsPaid()">
+                            @if (Model.IsPaid)
+                            {
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                            
+                                <span>Оплачено</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-circle me-1"></i>
+                            
+                                <span>Не оплачено</span>
+                            }
+                        </button>
                     </div>
                 </div>
 
@@ -71,19 +87,16 @@
                     <label asp-for="Notes" class="form-label">Нотатки</label>
                     <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
                 </div>
-
                 <div class="mb-3">
                     <label asp-for="Homework" class="form-label">Домашнє завдання</label>
                     <textarea asp-for="Homework" class="form-control" rows="2"
                               placeholder="Умова домашнього завдання для учня..."></textarea>
                 </div>
-
                 <div class="mb-3">
                     <label asp-for="MaterialLinks" class="form-label">Матеріали та посилання</label>
                     <textarea asp-for="MaterialLinks" class="form-control" rows="2"
                               placeholder="https://drive.google.com/... (кожне посилання з нового рядка)"></textarea>
                 </div>
-
                 <div class="mb-3">
                     <label asp-for="ProgressNote" class="form-label">Успіхи та проблеми учня</label>
                     <textarea asp-for="ProgressNote" class="form-control" rows="2"
@@ -93,8 +106,9 @@
 
             <div class="lesson-modal-footer">
                 <button type="submit" class="btn btn-warning">Оновити</button>
-                <button type="button" class="btn btn-danger"
-                        onclick="deleteLesson('@Model.LessonId')">
+                <button type="button"
+                        class="btn btn-danger"
+                        onclick="requestDeleteLesson('@Model.LessonId')">
                     Видалити
                 </button>
                 <button type="button" class="btn btn-secondary" data-lesson-close>Скасувати</button>
@@ -102,3 +116,18 @@
         </form>
     </div>
 </div>
+
+<script>
+    function toggleIsPaid() {
+        const checkbox = document.getElementById('edit-is-paid-checkbox');
+        const btn      = document.getElementById('edit-is-paid-btn');
+        checkbox.checked = !checkbox.checked;
+        if (checkbox.checked) {
+            btn.className = 'btn w-100 btn-success';
+            btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i><span>Оплачено</span>';
+        } else {
+            btn.className = 'btn w-100 btn-outline-secondary';
+            btn.innerHTML = '<i class="bi bi-circle me-1"></i><span>Не оплачено</span>';
+        }
+    }
+</script>

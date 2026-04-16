@@ -1,0 +1,128 @@
+﻿@using Rodentia.Core.Models.Teacher
+@model DebtAnalysisDto
+@{
+    ViewData["Title"] = "Аналіз заборгованості";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h2 class="fw-bold m-0">💳 Аналіз заборгованості</h2>
+        <div class="text-end">
+            <div class="text-muted small">Загальний борг</div>
+            <div class="fw-bold fs-4" style="color: @(Model.TotalDebt > 0 ? "#C62828" : "#2E7D32")">
+                @Model.TotalDebt.ToString("F0") грн
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Students.Any())
+    {
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            Заборгованостей немає — всі заняття оплачені! 🎉
+        </div>
+    }
+    else
+    {
+        @foreach (var student in Model.Students)
+        {
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header d-flex justify-content-between align-items-center py-3 px-4"
+                     style="background: #FFF3E0; border-bottom: 1px solid #FFE0B2;">
+                    <div>
+                        <span class="fw-bold fs-6">@student.FullName</span>
+                        <span class="text-muted ms-2 small">
+                            @student.UnpaidLessonsCount
+                            @(student.UnpaidLessonsCount == 1 ? "заняття" : "занять") не оплачено
+                        </span>
+                    </div>
+                    <div class="fw-bold text-danger fs-5">
+                        @student.TotalDebt.ToString("F0") грн
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 py-2">Дата</th>
+                                <th>Предмет / Тема</th>
+                                <th>Сума</th>
+                                <th class="text-end pe-4">Оплата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var lesson in student.UnpaidLessons)
+                            {
+                                <tr id="lesson-row-@lesson.LessonId">
+                                    <td class="ps-4">
+                                        @lesson.ScheduledAt.ToString("dd.MM.yyyy")
+                                        <div class="text-muted small">
+                                            @lesson.ScheduledAt.ToString("HH:mm")
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold">@lesson.Subject</span>
+                                        @if (!string.IsNullOrWhiteSpace(lesson.Topic))
+                                        {
+                                            <div class="text-muted small">@lesson.Topic</div>
+                                        }
+                                    </td>
+                                    <td class="fw-semibold">@lesson.Price.ToString("F0") грн</td>
+                                    <td class="text-end pe-4">
+                                        <button type="button"
+                                                class="btn btn-success btn-sm confirm-payment-btn"
+                                                data-lesson-id="@lesson.LessonId"
+                                                onclick="confirmPayment('@lesson.LessonId', this)">
+                                            <i class="bi bi-check-lg me-1"></i>Оплачено
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@Html.AntiForgeryToken()
+
+<script>
+    async function confirmPayment(lessonId, btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        try {
+            const response = await fetch('/Debt/ConfirmPayment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `lessonId=${lessonId}`
+            });
+
+            if (response.ok) {
+                const row = document.getElementById('lesson-row-' + lessonId);
+                row.style.background = '#E8F5E9';
+                btn.outerHTML = '<span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Оплачено</span>';
+
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                const data = await response.json();
+                alert(data.message || 'Помилка підтвердження оплати.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Оплачено';
+            }
+        } catch (err) {
+            console.error(err);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Оплачено';
+        }
+    }
+</script>

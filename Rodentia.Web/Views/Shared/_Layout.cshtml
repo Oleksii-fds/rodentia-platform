@@ -89,6 +89,10 @@
                    asp-controller="Teacher" asp-action="MyStudents">
                     <i class="bi bi-people me-2"></i> Мої учні
                 </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Debt" ? "active-orange" : "")"
+                   asp-controller="Debt" asp-action="Index">
+                    <i class="bi bi-cash-coin me-2"></i> Борги
+                </a>
             }
         </nav>
     </div>
@@ -103,7 +107,9 @@
                 ? User.Identity?.Name
                 : $"{firstName} {lastName}".Trim();
                 var roleLabel = User.IsInRole("Teacher") ? "Викладач" : "Учень";
-                var initial = (!string.IsNullOrWhiteSpace(firstName) ? firstName[0] : User.Identity?.Name?[0] ?? '?').ToString().ToUpper();
+                var initial = (!string.IsNullOrWhiteSpace(firstName)
+                ? firstName[0]
+                : User.Identity?.Name?[0] ?? '?').ToString().ToUpper();
             }
 
             <div class="d-flex align-items-center gap-2 me-3">
@@ -115,7 +121,6 @@
                 {
                     <div class="navbar-avatar-placeholder">@initial</div>
                 }
-
                 <div class="text-end">
                     <div class="fw-bold lh-1">@displayName</div>
                     <small class="text-muted">@roleLabel</small>
@@ -133,10 +138,7 @@
         </header>
 
         <div id="profile-modal-root"></div>
-
-        <main role="main">
-            @RenderBody()
-        </main>
+        <main role="main">@RenderBody()</main>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
