@@ -90,6 +90,7 @@ else
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseMiddleware<Rodentia.Web.Middleware.RequestExecutionTimeLoggingMiddleware>();
 app.UseAuthentication();
 app.UseMiddleware<Rodentia.Web.Middleware.RequestLoggingMiddleware>();
 app.UseAuthorization();
