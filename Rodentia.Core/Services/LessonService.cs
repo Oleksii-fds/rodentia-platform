@@ -191,6 +191,54 @@ public sealed class LessonService : ILessonService
         });
     }
 
+    public async Task<Result<TeacherLessonHistoryDto>> GetTeacherCompletedLessonsHistoryAsync(
+        Guid teacherId,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = (await _lessonRepository.GetByUserIdAsync(teacherId, cancellationToken))
+            .Where(x => x.TeacherId == teacherId && x.Status == LessonStatus.Completed);
+
+        if (fromDate.HasValue)
+        {
+            var fromBoundary = fromDate.Value.Date;
+            query = query.Where(x => x.ScheduledAt >= fromBoundary);
+        }
+
+        if (toDate.HasValue)
+        {
+            var toBoundary = toDate.Value.Date.AddDays(1).AddTicks(-1);
+            query = query.Where(x => x.ScheduledAt <= toBoundary);
+        }
+
+        var lessons = query
+            .OrderByDescending(x => x.ScheduledAt)
+            .ToList();
+
+        var historyItems = lessons
+            .Select(x => new TeacherLessonHistoryItemDto
+            {
+                LessonId = x.Id,
+                StudentId = x.StudentId,
+                StudentName = string.IsNullOrWhiteSpace(x.DisplayName) ? "Невідомий учень" : x.DisplayName,
+                ScheduledAt = x.ScheduledAt,
+                Subject = x.Subject,
+                Topic = x.Topic ?? string.Empty,
+                Price = x.Price,
+                IsPaid = x.IsPaid,
+                Status = x.Status
+            })
+            .ToList();
+
+        return Result<TeacherLessonHistoryDto>.SuccessData(new TeacherLessonHistoryDto
+        {
+            TotalCompletedLessons = historyItems.Count,
+            TotalRevenue = historyItems.Sum(x => x.Price),
+            Lessons = historyItems
+        });
+    }
+
     public async Task<Result> EditLessonAsync(
         Guid teacherId, EditLessonRequest request, CancellationToken cancellationToken = default)
     {

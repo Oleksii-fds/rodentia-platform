@@ -23,6 +23,11 @@ public interface ILessonService
     Task<Result<StudentPaymentOverviewDto>> GetStudentPaymentOverviewAsync(
         Guid studentId,
         CancellationToken cancellationToken = default);
+    Task<Result<TeacherLessonHistoryDto>> GetTeacherCompletedLessonsHistoryAsync(
+        Guid teacherId,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
+        CancellationToken cancellationToken = default);
     Task<Result> EditLessonAsync(
         Guid teacherId, 
         EditLessonRequest request, 

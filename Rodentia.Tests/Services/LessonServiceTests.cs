@@ -268,6 +268,129 @@ public class LessonServiceTests
     }
 
     [Fact]
+    public async Task GetTeacherCompletedLessonsHistoryAsync_ShouldReturnOnlyCompletedLessonsForTeacher()
+    {
+        var teacherId = Guid.NewGuid();
+        var anotherTeacherId = Guid.NewGuid();
+        var lessons = new List<Lesson>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = teacherId,
+                StudentId = Guid.NewGuid(),
+                DisplayName = "Іван Петренко",
+                Subject = "Математика",
+                Topic = "Тригонометрія",
+                Price = 300,
+                IsPaid = true,
+                Status = LessonStatus.Completed,
+                ScheduledAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = teacherId,
+                StudentId = Guid.NewGuid(),
+                DisplayName = "Олена Коваль",
+                Subject = "Фізика",
+                Topic = "Механіка",
+                Price = 250,
+                IsPaid = false,
+                Status = LessonStatus.Scheduled,
+                ScheduledAt = DateTime.UtcNow
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = anotherTeacherId,
+                StudentId = Guid.NewGuid(),
+                DisplayName = "Марія Іваненко",
+                Subject = "Хімія",
+                Topic = "Розчини",
+                Price = 400,
+                IsPaid = true,
+                Status = LessonStatus.Completed,
+                ScheduledAt = DateTime.UtcNow
+            }
+        };
+
+        _repoMock
+            .Setup(x => x.GetByUserIdAsync(teacherId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(lessons);
+
+        var result = await _service.GetTeacherCompletedLessonsHistoryAsync(teacherId);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(1, result.Data!.TotalCompletedLessons);
+        Assert.Equal(300, result.Data.TotalRevenue);
+        Assert.Single(result.Data.Lessons);
+        Assert.Equal("Іван Петренко", result.Data.Lessons[0].StudentName);
+    }
+
+    [Fact]
+    public async Task GetTeacherCompletedLessonsHistoryAsync_ShouldFilterByDateRange()
+    {
+        var teacherId = Guid.NewGuid();
+        var lessons = new List<Lesson>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = teacherId,
+                StudentId = Guid.NewGuid(),
+                DisplayName = "Учень 1",
+                Subject = "Математика",
+                Price = 100,
+                IsPaid = true,
+                Status = LessonStatus.Completed,
+                ScheduledAt = new DateTime(2026, 4, 1, 10, 0, 0, DateTimeKind.Utc)
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = teacherId,
+                StudentId = Guid.NewGuid(),
+                DisplayName = "Учень 2",
+                Subject = "Фізика",
+                Price = 200,
+                IsPaid = true,
+                Status = LessonStatus.Completed,
+                ScheduledAt = new DateTime(2026, 4, 15, 12, 0, 0, DateTimeKind.Utc)
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = teacherId,
+                StudentId = Guid.NewGuid(),
+                DisplayName = "Учень 3",
+                Subject = "Хімія",
+                Price = 300,
+                IsPaid = true,
+                Status = LessonStatus.Completed,
+                ScheduledAt = new DateTime(2026, 4, 25, 14, 0, 0, DateTimeKind.Utc)
+            }
+        };
+
+        _repoMock
+            .Setup(x => x.GetByUserIdAsync(teacherId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(lessons);
+
+        var result = await _service.GetTeacherCompletedLessonsHistoryAsync(
+            teacherId,
+            new DateTime(2026, 4, 10),
+            new DateTime(2026, 4, 20));
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(1, result.Data!.TotalCompletedLessons);
+        Assert.Equal(200, result.Data.TotalRevenue);
+        Assert.Single(result.Data.Lessons);
+        Assert.Equal("Учень 2", result.Data.Lessons[0].StudentName);
+    }
+
+    [Fact]
     public async Task DeleteLessonAsync_ShouldReturnFailure_WhenLessonNotFound()
     {
         var teacherId = Guid.NewGuid();

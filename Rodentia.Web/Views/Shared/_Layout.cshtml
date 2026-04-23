@@ -93,6 +93,10 @@
                    asp-controller="Debt" asp-action="Index">
                     <i class="bi bi-cash-coin me-2"></i> Борги
                 </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "TeacherLessonHistory" ? "active-orange" : "")"
+                   asp-controller="TeacherLessonHistory" asp-action="Index">
+                    <i class="bi bi-clock-history me-2"></i> Історія уроків
+                </a>
             }
             @if (User.IsInRole("Student"))
             {

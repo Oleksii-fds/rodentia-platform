@@ -1,0 +1,95 @@
+@model Rodentia.Core.Models.Lessons.TeacherLessonHistoryDto
+@{
+    ViewData["Title"] = "Історія уроків";
+    var fromDate = ViewBag.FromDate as string;
+    var toDate = ViewBag.ToDate as string;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold m-0">Історія проведених уроків</h2>
+    </div>
+
+    <form method="get" class="row g-3 align-items-end mb-4">
+        <div class="col-md-4">
+            <label class="form-label">Від дати</label>
+            <input type="date" name="fromDate" class="form-control" value="@fromDate" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">До дати</label>
+            <input type="date" name="toDate" class="form-control" value="@toDate" />
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-warning">Застосувати</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Скинути</a>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Проведено уроків</h5>
+                    <div class="fs-3 fw-bold">@Model.TotalCompletedLessons</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success">Сума за проведені</h5>
+                    <div class="fs-3 fw-bold">@Model.TotalRevenue.ToString("0.##") грн</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold">Проведені уроки</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Учень</th>
+                            <th>Предмет</th>
+                            <th>Тема</th>
+                            <th>Оплата</th>
+                            <th class="text-end">Ціна</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Lessons.Any())
+                        {
+                            <tr><td colspan="6" class="text-center text-muted py-3">Проведених уроків ще немає</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var lesson in Model.Lessons)
+                            {
+                                <tr>
+                                    <td>@lesson.ScheduledAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>@lesson.StudentName</td>
+                                    <td>@lesson.Subject</td>
+                                    <td>@(string.IsNullOrWhiteSpace(lesson.Topic) ? "-" : lesson.Topic)</td>
+                                    <td>
+                                        @if (lesson.IsPaid)
+                                        {
+                                            <span class="badge text-bg-success">Оплачено</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge text-bg-warning">Борг</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">@lesson.Price.ToString("0.##")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
