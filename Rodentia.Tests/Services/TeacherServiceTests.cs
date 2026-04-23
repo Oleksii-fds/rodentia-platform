@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Moq;
 using Rodentia.Core.Entities;
@@ -14,6 +15,7 @@ public class TeacherServiceTests
 {
     private readonly Mock<ITeacherRepository> _repositoryMock;
     private readonly Mock<UserManager<User>> _userManagerMock;
+    private readonly IMemoryCache _memoryCache;
     private readonly TeacherService _service;
 
     public TeacherServiceTests()
@@ -22,10 +24,11 @@ public class TeacherServiceTests
         var store = new Mock<IUserStore<User>>();
         _userManagerMock = new Mock<UserManager<User>>(
             store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+        _memoryCache = new MemoryCache(new MemoryCacheOptions());
 
         var options = Options.Create(new RodentiaOptions { SearchMinLength = 2 });
         _service = new TeacherService(
-            _repositoryMock.Object, _userManagerMock.Object, options);
+            _repositoryMock.Object, _userManagerMock.Object, options, _memoryCache);
     }
 
     private void SetupAsyncUserList(List<User> users)

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
@@ -13,20 +14,33 @@ public class TeacherService : ITeacherService
     private readonly ITeacherRepository _teacherRepository;
     private readonly UserManager<User> _userManager;
     private readonly RodentiaOptions _options;
+    private readonly IMemoryCache _memoryCache;
 
     public TeacherService(
         ITeacherRepository teacherRepository,
         UserManager<User> userManager,
-        IOptions<RodentiaOptions> options)
+        IOptions<RodentiaOptions> options,
+        IMemoryCache memoryCache)
     {
         _teacherRepository = teacherRepository;
         _userManager = userManager;
         _options = options.Value;
+        _memoryCache = memoryCache;
     }
 
     public async Task<IEnumerable<User>> GetMyStudentsAsync(Guid teacherId)
     {
-        return await _teacherRepository.GetStudentsByTeacherIdAsync(teacherId);
+        var cacheKey = GetStudentsCacheKey(teacherId);
+        if (_memoryCache.TryGetValue(cacheKey, out List<User> cachedStudents) && cachedStudents is not null)
+            return cachedStudents;
+
+        var students = (await _teacherRepository.GetStudentsByTeacherIdAsync(teacherId)).ToList();
+        _memoryCache.Set(
+            cacheKey,
+            students,
+            TimeSpan.FromMinutes(_options.StudentsCacheLifetimeMinutes));
+
+        return students;
     }
 
     public async Task<Result> AddStudentAsync(Guid teacherId, string identifier)
@@ -54,6 +68,7 @@ public class TeacherService : ITeacherService
         };
 
         await _teacherRepository.AddLinkAsync(link);
+        _memoryCache.Remove(GetStudentsCacheKey(teacherId));
 
         return Result.Ok();
     }
@@ -61,6 +76,7 @@ public class TeacherService : ITeacherService
     public async Task<Result> RemoveStudentAsync(Guid teacherId, Guid studentId)
     {
         await _teacherRepository.RemoveLinkAsync(teacherId, studentId);
+        _memoryCache.Remove(GetStudentsCacheKey(teacherId));
         return Result.Ok();
     }
     public async Task<Result> ConfirmPaymentAsync(Guid teacherId, Guid lessonId)
@@ -131,4 +147,6 @@ public class TeacherService : ITeacherService
             Students = studentDebts
         });
     }
+
+    private static string GetStudentsCacheKey(Guid teacherId) => $"teacher:{teacherId}:students";
 }

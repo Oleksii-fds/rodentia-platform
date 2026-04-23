@@ -55,6 +55,7 @@ builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 

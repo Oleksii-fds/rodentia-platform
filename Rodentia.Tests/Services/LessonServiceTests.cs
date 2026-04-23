@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
@@ -14,6 +15,7 @@ public class LessonServiceTests
     private readonly Mock<ILessonRepository> _repoMock;
     private readonly LessonService _service;
     private readonly RodentiaOptions _options;
+    private readonly IMemoryCache _memoryCache;
 
     public LessonServiceTests()
     {
@@ -25,10 +27,12 @@ public class LessonServiceTests
             ScheduleAheadDays = 60,
             SearchMinLength = 2
         };
+        _memoryCache = new MemoryCache(new MemoryCacheOptions());
 
         _service = new LessonService(
             _repoMock.Object,
-            Options.Create(_options));
+            Options.Create(_options),
+            _memoryCache);
     }
 
 

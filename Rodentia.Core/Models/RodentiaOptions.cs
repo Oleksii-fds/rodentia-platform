@@ -13,4 +13,6 @@ public sealed class RodentiaOptions
     public int MinLessonDurationMinutes { get; set; } = 15;
 
     public int ScheduleAheadDays { get; set; } = 60;
+
+    public int StudentsCacheLifetimeMinutes { get; set; } = 30;
 }

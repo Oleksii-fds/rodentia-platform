@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Memory;
 using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
 using Rodentia.Core.Models;
@@ -10,13 +11,16 @@ public sealed class LessonService : ILessonService
 {
     private readonly ILessonRepository _lessonRepository;
     private readonly RodentiaOptions _options;
+    private readonly IMemoryCache _memoryCache;
 
     public LessonService(
         ILessonRepository lessonRepository,
-        IOptions<RodentiaOptions> options)
+        IOptions<RodentiaOptions> options,
+        IMemoryCache memoryCache)
     {
         _lessonRepository = lessonRepository;
         _options = options.Value;
+        _memoryCache = memoryCache;
     }
 
     public async Task<Result<IEnumerable<Lesson>>> GetScheduleAsync(Guid userId)
@@ -34,7 +38,7 @@ public sealed class LessonService : ILessonService
         if (teacher.Role != UserRole.Teacher)
             return Result<CreateLessonModalDto>.Failure("Лише викладач може створювати заняття.");
 
-        var students = await _lessonRepository.GetActiveStudentsByTeacherIdAsync(teacherId, cancellationToken);
+        var students = await GetCachedStudentsByTeacherIdAsync(teacherId, cancellationToken);
 
         var dto = new CreateLessonModalDto
         {
@@ -115,7 +119,7 @@ public sealed class LessonService : ILessonService
         if (lesson == null) return Result<EditLessonModalDto>.Failure("Заняття не знайдено.");
         if (lesson.TeacherId != teacherId) return Result<EditLessonModalDto>.Failure("Ви не маєте доступу до цього заняття.");
 
-        var students = await _lessonRepository.GetActiveStudentsByTeacherIdAsync(teacherId, cancellationToken);
+        var students = await GetCachedStudentsByTeacherIdAsync(teacherId, cancellationToken);
 
         var dto = new EditLessonModalDto
         {
@@ -193,4 +197,21 @@ public sealed class LessonService : ILessonService
         await _lessonRepository.SaveChangesAsync(cancellationToken);
         return Result.Ok();
     }
+
+    private async Task<List<User>> GetCachedStudentsByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken)
+    {
+        var cacheKey = GetStudentsCacheKey(teacherId);
+        if (_memoryCache.TryGetValue(cacheKey, out List<User> cachedStudents) && cachedStudents is not null)
+            return cachedStudents;
+
+        var students = (await _lessonRepository.GetActiveStudentsByTeacherIdAsync(teacherId, cancellationToken)).ToList();
+        _memoryCache.Set(
+            cacheKey,
+            students,
+            TimeSpan.FromMinutes(_options.StudentsCacheLifetimeMinutes));
+
+        return students;
+    }
+
+    private static string GetStudentsCacheKey(Guid teacherId) => $"teacher:{teacherId}:students";
 }
