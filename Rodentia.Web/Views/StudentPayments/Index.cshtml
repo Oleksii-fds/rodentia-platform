@@ -1,0 +1,108 @@
+@model Rodentia.Core.Models.Lessons.StudentPaymentOverviewDto
+@{
+    ViewData["Title"] = "Оплата";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold m-0">Оплата уроків</h2>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success">Оплачено</h5>
+                    <div class="fs-3 fw-bold">@Model.PaidTotal.ToString("0.##") грн</div>
+                    <div class="text-muted">Уроків: @Model.PaidLessons.Count</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">Заборгованість</h5>
+                    <div class="fs-3 fw-bold">@Model.DebtTotal.ToString("0.##") грн</div>
+                    <div class="text-muted">Уроків: @Model.DebtLessons.Count</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-semibold text-success">Оплачені уроки</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Предмет</th>
+                                    <th>Тема</th>
+                                    <th class="text-end">Сума</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.PaidLessons.Any())
+                                {
+                                    <tr><td colspan="4" class="text-center text-muted py-3">Немає оплачених уроків</td></tr>
+                                }
+                                else
+                                {
+                                    @foreach (var lesson in Model.PaidLessons)
+                                    {
+                                        <tr>
+                                            <td>@lesson.ScheduledAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td>@lesson.Subject</td>
+                                            <td>@(string.IsNullOrWhiteSpace(lesson.Topic) ? "-" : lesson.Topic)</td>
+                                            <td class="text-end">@lesson.Price.ToString("0.##")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-semibold text-danger">Заборговані уроки</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Предмет</th>
+                                    <th>Тема</th>
+                                    <th class="text-end">Сума</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.DebtLessons.Any())
+                                {
+                                    <tr><td colspan="4" class="text-center text-muted py-3">Немає заборгованих уроків</td></tr>
+                                }
+                                else
+                                {
+                                    @foreach (var lesson in Model.DebtLessons)
+                                    {
+                                        <tr>
+                                            <td>@lesson.ScheduledAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td>@lesson.Subject</td>
+                                            <td>@(string.IsNullOrWhiteSpace(lesson.Topic) ? "-" : lesson.Topic)</td>
+                                            <td class="text-end">@lesson.Price.ToString("0.##")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

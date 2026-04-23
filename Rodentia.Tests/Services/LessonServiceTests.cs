@@ -218,6 +218,56 @@ public class LessonServiceTests
     }
 
     [Fact]
+    public async Task GetStudentPaymentOverviewAsync_ShouldSplitPaidAndDebtLessons()
+    {
+        var studentId = Guid.NewGuid();
+        var lessons = new List<Lesson>
+        {
+            new() { Id = Guid.NewGuid(), StudentId = studentId, Subject = "Математика", Price = 200, IsPaid = true, ScheduledAt = DateTime.UtcNow.AddDays(-2) },
+            new() { Id = Guid.NewGuid(), StudentId = studentId, Subject = "Фізика", Price = 150, IsPaid = false, ScheduledAt = DateTime.UtcNow.AddDays(-1) },
+            new() { Id = Guid.NewGuid(), StudentId = studentId, Subject = "Хімія", Price = 100, IsPaid = true, ScheduledAt = DateTime.UtcNow }
+        };
+
+        _repoMock
+            .Setup(x => x.GetByUserIdAsync(studentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(lessons);
+
+        var result = await _service.GetStudentPaymentOverviewAsync(studentId);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(300, result.Data!.PaidTotal);
+        Assert.Equal(150, result.Data.DebtTotal);
+        Assert.Equal(2, result.Data.PaidLessons.Count);
+        Assert.Single(result.Data.DebtLessons);
+    }
+
+    [Fact]
+    public async Task GetStudentPaymentOverviewAsync_ShouldIgnoreLessonsOfOtherStudents()
+    {
+        var studentId = Guid.NewGuid();
+        var otherStudentId = Guid.NewGuid();
+        var lessons = new List<Lesson>
+        {
+            new() { Id = Guid.NewGuid(), StudentId = studentId, Subject = "Математика", Price = 200, IsPaid = true, ScheduledAt = DateTime.UtcNow },
+            new() { Id = Guid.NewGuid(), StudentId = otherStudentId, Subject = "Фізика", Price = 500, IsPaid = false, ScheduledAt = DateTime.UtcNow }
+        };
+
+        _repoMock
+            .Setup(x => x.GetByUserIdAsync(studentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(lessons);
+
+        var result = await _service.GetStudentPaymentOverviewAsync(studentId);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(200, result.Data!.PaidTotal);
+        Assert.Equal(0, result.Data.DebtTotal);
+        Assert.Single(result.Data.PaidLessons);
+        Assert.Empty(result.Data.DebtLessons);
+    }
+
+    [Fact]
     public async Task DeleteLessonAsync_ShouldReturnFailure_WhenLessonNotFound()
     {
         var teacherId = Guid.NewGuid();

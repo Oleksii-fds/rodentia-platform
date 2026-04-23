@@ -147,6 +147,50 @@ public sealed class LessonService : ILessonService
         return Result<EditLessonModalDto>.SuccessData(dto);
     }
 
+    public async Task<Result<StudentPaymentOverviewDto>> GetStudentPaymentOverviewAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default)
+    {
+        var lessons = (await _lessonRepository.GetByUserIdAsync(studentId, cancellationToken))
+            .Where(x => x.StudentId == studentId)
+            .OrderByDescending(x => x.ScheduledAt)
+            .ToList();
+
+        var paidLessons = lessons
+            .Where(x => x.IsPaid)
+            .Select(x => new StudentPaymentLessonDto
+            {
+                LessonId = x.Id,
+                ScheduledAt = x.ScheduledAt,
+                Subject = x.Subject,
+                Topic = x.Topic ?? string.Empty,
+                Price = x.Price,
+                IsPaid = x.IsPaid
+            })
+            .ToList();
+
+        var debtLessons = lessons
+            .Where(x => !x.IsPaid)
+            .Select(x => new StudentPaymentLessonDto
+            {
+                LessonId = x.Id,
+                ScheduledAt = x.ScheduledAt,
+                Subject = x.Subject,
+                Topic = x.Topic ?? string.Empty,
+                Price = x.Price,
+                IsPaid = x.IsPaid
+            })
+            .ToList();
+
+        return Result<StudentPaymentOverviewDto>.SuccessData(new StudentPaymentOverviewDto
+        {
+            PaidTotal = paidLessons.Sum(x => x.Price),
+            DebtTotal = debtLessons.Sum(x => x.Price),
+            PaidLessons = paidLessons,
+            DebtLessons = debtLessons
+        });
+    }
+
     public async Task<Result> EditLessonAsync(
         Guid teacherId, EditLessonRequest request, CancellationToken cancellationToken = default)
     {
