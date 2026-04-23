@@ -29,6 +29,48 @@ public sealed class LessonService : ILessonService
         return Result<IEnumerable<Lesson>>.SuccessData(lessons);
     }
 
+    public async Task<Result<LessonDetailsDto>> GetLessonDetailsAsync(
+        Guid currentUserId,
+        Guid lessonId,
+        CancellationToken cancellationToken = default)
+    {
+        var lessons = await _lessonRepository.GetByUserIdAsync(currentUserId, cancellationToken);
+        var lesson = lessons.FirstOrDefault(x => x.Id == lessonId);
+        if (lesson is null)
+            return Result<LessonDetailsDto>.Failure("Заняття не знайдено або доступ заборонено.");
+
+        var currentUser = await _lessonRepository.GetUserByIdAsync(currentUserId, cancellationToken);
+        var statusLabel = lesson.Status switch
+        {
+            LessonStatus.Scheduled => "Заплановано",
+            LessonStatus.Completed => "Проведено",
+            LessonStatus.Canceled => "Скасовано",
+            _ => lesson.Status.ToString()
+        };
+
+        return Result<LessonDetailsDto>.SuccessData(new LessonDetailsDto
+        {
+            LessonId = lesson.Id,
+            ScheduledAt = lesson.ScheduledAt,
+            DurationMinutes = lesson.DurationMinutes,
+            Subject = lesson.Subject,
+            Topic = lesson.Topic ?? string.Empty,
+            TeacherName = currentUser is not null && currentUser.Role == UserRole.Student
+                ? lesson.DisplayName
+                : "Ви",
+            StudentName = currentUser is not null && currentUser.Role == UserRole.Teacher
+                ? lesson.DisplayName
+                : "Ви",
+            Price = lesson.Price,
+            IsPaid = lesson.IsPaid,
+            StatusLabel = statusLabel,
+            Notes = lesson.Notes ?? string.Empty,
+            Homework = lesson.Homework ?? string.Empty,
+            MaterialLinks = lesson.MaterialLinks ?? string.Empty,
+            ProgressNote = lesson.ProgressNote ?? string.Empty
+        });
+    }
+
     public async Task<Result<CreateLessonModalDto>> GetCreateLessonModalDataAsync(
         Guid teacherId, CancellationToken cancellationToken = default)
     {

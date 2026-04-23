@@ -1,0 +1,36 @@
+@model Rodentia.Core.Models.Lessons.LessonDetailsDto
+
+<div class="lesson-modal-overlay" id="lesson-details-modal-overlay">
+    <div class="lesson-modal-window" role="dialog" aria-modal="true">
+        <div class="lesson-modal-header">
+            <span>Деталі заняття</span>
+            <button type="button" class="lesson-modal-close" data-lesson-close>&times;</button>
+        </div>
+        <div class="lesson-modal-body">
+            <div class="row mb-2">
+                <div class="col-md-6"><strong>Дата:</strong> @Model.ScheduledAt.ToString("dd.MM.yyyy HH:mm")</div>
+                <div class="col-md-6"><strong>Тривалість:</strong> @Model.DurationMinutes хв</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-6"><strong>Викладач:</strong> @Model.TeacherName</div>
+                <div class="col-md-6"><strong>Учень:</strong> @Model.StudentName</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-6"><strong>Предмет:</strong> @Model.Subject</div>
+                <div class="col-md-6"><strong>Тема:</strong> @(string.IsNullOrWhiteSpace(Model.Topic) ? "-" : Model.Topic)</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-6"><strong>Статус:</strong> @Model.StatusLabel</div>
+                <div class="col-md-6"><strong>Оплата:</strong> @(Model.IsPaid ? "Оплачено" : "Не оплачено")</div>
+            </div>
+            <div class="mb-2"><strong>Ціна:</strong> @Model.Price.ToString("0.##") грн</div>
+            <div class="mb-2"><strong>Нотатки:</strong> @(string.IsNullOrWhiteSpace(Model.Notes) ? "-" : Model.Notes)</div>
+            <div class="mb-2"><strong>Домашнє завдання:</strong> @(string.IsNullOrWhiteSpace(Model.Homework) ? "-" : Model.Homework)</div>
+            <div class="mb-2"><strong>Матеріали:</strong> @(string.IsNullOrWhiteSpace(Model.MaterialLinks) ? "-" : Model.MaterialLinks)</div>
+            <div class="mb-2"><strong>Успіхи/проблеми:</strong> @(string.IsNullOrWhiteSpace(Model.ProgressNote) ? "-" : Model.ProgressNote)</div>
+        </div>
+        <div class="lesson-modal-footer">
+            <button type="button" class="btn btn-secondary" data-lesson-close>Закрити</button>
+        </div>
+    </div>
+</div>

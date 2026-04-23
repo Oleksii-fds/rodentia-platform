@@ -124,6 +124,16 @@ public class ScheduleController(ILessonService lessonService) : BaseController
         return PartialView("_EditLessonModal", vm);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> LessonDetailsModal(Guid lessonId, CancellationToken cancellationToken)
+    {
+        var result = await lessonService.GetLessonDetailsAsync(CurrentUserId, lessonId, cancellationToken);
+        if (!result.IsSuccess || result.Data is null)
+            return BadRequest(result.ErrorMessage ?? "Не вдалося отримати деталі заняття.");
+
+        return PartialView("_LessonDetailsModal", result.Data);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditLesson(

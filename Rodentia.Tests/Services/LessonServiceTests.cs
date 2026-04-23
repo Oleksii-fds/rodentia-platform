@@ -218,6 +218,65 @@ public class LessonServiceTests
     }
 
     [Fact]
+    public async Task GetLessonDetailsAsync_ShouldReturnLessonDetails_WhenUserHasAccess()
+    {
+        var userId = Guid.NewGuid();
+        var lessonId = Guid.NewGuid();
+        var lessons = new List<Lesson>
+        {
+            new()
+            {
+                Id = lessonId,
+                TeacherId = Guid.NewGuid(),
+                StudentId = userId,
+                DisplayName = "Петро В.",
+                Subject = "Математика",
+                Topic = "Інтеграли",
+                DurationMinutes = 90,
+                Price = 450,
+                IsPaid = false,
+                Status = LessonStatus.Scheduled,
+                Notes = "Нотатка",
+                Homework = "Домашнє",
+                MaterialLinks = "https://example.com",
+                ProgressNote = "Є прогрес",
+                ScheduledAt = DateTime.UtcNow
+            }
+        };
+
+        _repoMock
+            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(lessons);
+        _repoMock
+            .Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = userId, Role = UserRole.Student });
+
+        var result = await _service.GetLessonDetailsAsync(userId, lessonId);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal("Математика", result.Data!.Subject);
+        Assert.Equal("Петро В.", result.Data.TeacherName);
+        Assert.Equal("Ви", result.Data.StudentName);
+    }
+
+    [Fact]
+    public async Task GetLessonDetailsAsync_ShouldReturnFailure_WhenLessonNotInUserScope()
+    {
+        var userId = Guid.NewGuid();
+        var requestedLessonId = Guid.NewGuid();
+
+        _repoMock
+            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Lesson>());
+
+        var result = await _service.GetLessonDetailsAsync(userId, requestedLessonId);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Заняття не знайдено або доступ заборонено.", result.ErrorMessage);
+    }
+
+    [Fact]
     public async Task GetStudentPaymentOverviewAsync_ShouldSplitPaidAndDebtLessons()
     {
         var studentId = Guid.NewGuid();

@@ -7,6 +7,7 @@ namespace Rodentia.Core.Interfaces;
 public interface ILessonService
 {
     Task<Result<IEnumerable<Lesson>>> GetScheduleAsync(Guid userId);
+    Task<Result<LessonDetailsDto>> GetLessonDetailsAsync(Guid currentUserId, Guid lessonId, CancellationToken cancellationToken = default);
 
     Task<Result<CreateLessonModalDto>> GetCreateLessonModalDataAsync(
         Guid teacherId,

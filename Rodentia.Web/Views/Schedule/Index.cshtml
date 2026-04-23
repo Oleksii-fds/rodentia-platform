@@ -38,9 +38,12 @@
                class="btn btn-outline-secondary btn-sm">Наступний тиждень →</a>
         </div>
 
-        <button type="button" id="open-create-lesson-modal" class="btn btn-warning shadow-sm">
-            + Створити заняття
-        </button>
+        @if (User.IsInRole("Teacher"))
+        {
+            <button type="button" id="open-create-lesson-modal" class="btn btn-warning shadow-sm">
+                + Створити заняття
+            </button>
+        }
     </div>
 
     <div class="d-flex gap-3 mb-3 align-items-center">

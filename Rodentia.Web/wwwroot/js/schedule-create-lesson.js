@@ -21,14 +21,22 @@
     document.querySelectorAll('.lesson-item').forEach(item => {
         item.addEventListener('click', async function () {
             const lessonId = this.dataset.lessonId;
-            const response = await fetch(`/Schedule/EditLessonModal?lessonId=${lessonId}`, {
+            const isTeacher = Boolean(openButton);
+            const endpoint = isTeacher
+                ? `/Schedule/EditLessonModal?lessonId=${lessonId}`
+                : `/Schedule/LessonDetailsModal?lessonId=${lessonId}`;
+            const response = await fetch(endpoint, {
                 method: "GET",
                 headers: { "X-Requested-With": "XMLHttpRequest" }
             });
             const responseText = await response.text();
-            if (!response.ok) { alert("Не вдалося відкрити форму редагування заняття."); return; }
+            if (!response.ok) { alert("Не вдалося відкрити деталі заняття."); return; }
             modalRoot.innerHTML = responseText;
-            bindEditLessonModal(modalRoot);
+            if (isTeacher) {
+                bindEditLessonModal(modalRoot);
+                return;
+            }
+            bindLessonDetailsModal(modalRoot);
         });
     });
 });
@@ -101,6 +109,16 @@ function bindEditLessonModal(modalRoot) {
         errorsBox.innerHTML = errors.map(e => `<div>${escapeHtml(e)}</div>`).join("");
         errorsBox.classList.add("is-visible");
     });
+}
+
+function bindLessonDetailsModal(modalRoot) {
+    const overlay = modalRoot.querySelector("#lesson-details-modal-overlay");
+    const closeButtons = modalRoot.querySelectorAll("[data-lesson-close]");
+
+    if (!overlay) return;
+
+    closeButtons.forEach(btn => btn.addEventListener("click", () => { modalRoot.innerHTML = ""; }));
+    overlay.addEventListener("click", e => { if (e.target === overlay) modalRoot.innerHTML = ""; });
 }
 
 function requestDeleteLesson(lessonId) {
