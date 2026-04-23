@@ -91,6 +91,7 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
+app.UseMiddleware<Rodentia.Web.Middleware.RequestLoggingMiddleware>();
 app.UseAuthorization();
 app.MapStaticAssets();
 
