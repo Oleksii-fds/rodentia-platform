@@ -73,6 +73,36 @@
             font-size: 16px;
             flex-shrink: 0;
         }
+
+        .notification-bell-btn {
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            font-size: 0.7rem;
+            padding: 0 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-menu {
+            width: 360px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .notification-item {
+            border-bottom: 1px solid #f1f1f1;
+            padding: 10px 12px;
+        }
     </style>
 </head>
 <body>
@@ -123,6 +153,27 @@
                 : User.Identity?.Name?[0] ?? '?').ToString().ToUpper();
             }
 
+            <div class="dropdown me-3">
+                <button class="btn btn-light border notification-bell-btn"
+                        type="button"
+                        id="notificationsDropdown"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    <i class="bi bi-bell"></i>
+                    <span id="notification-badge" class="bg-danger text-white notification-badge d-none">0</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end notification-menu" aria-labelledby="notificationsDropdown">
+                    <div class="px-3 py-2 fw-bold border-bottom">Сповіщення</div>
+                    <div id="notification-list">
+                        <div class="px-3 py-2 text-muted small">Завантаження...</div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="notifications-antiforgery-form" asp-controller="Notifications" asp-action="MarkAsRead" method="post" class="d-none">
+                @Html.AntiForgeryToken()
+            </form>
+
             <div class="d-flex align-items-center gap-2 me-3">
                 @if (!string.IsNullOrWhiteSpace(avatarPath))
                 {
@@ -155,5 +206,6 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/profile-modal.js" asp-append-version="true"></script>
+    <script src="~/js/notifications.js" asp-append-version="true"></script>
 </body>
 </html>

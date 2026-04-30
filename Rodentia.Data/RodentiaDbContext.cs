@@ -16,6 +16,7 @@ public class RodentiaDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gui
 
     public DbSet<Payment> Payments { get; set; } = null!;
     public DbSet<Lesson> Lessons { get; set; } = null!;
+    public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<LessonRescheduleRequest> LessonRescheduleRequests { get; set; } = null!;
     public DbSet<TeacherStudentLink> TeacherStudentLinks { get; set; } = null!;
     public DbSet<ProgressNote> ProgressNotes { get; set; } = null!;
@@ -28,6 +29,7 @@ public class RodentiaDbContext : IdentityDbContext<User, IdentityRole<Guid>, Gui
 
         modelBuilder.Entity<User>().ToTable("users"); 
         modelBuilder.Entity<Lesson>().ToTable("lessons");
+        modelBuilder.Entity<Notification>().ToTable("notifications");
         modelBuilder.Entity<LessonRescheduleRequest>().ToTable("lesson_reschedule_requests");
         modelBuilder.Entity<Payment>().ToTable("payments");
         modelBuilder.Entity<TeacherStudentLink>().ToTable("teacher_student_links");

@@ -3,6 +3,7 @@
 using Moq;
 using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
+using Rodentia.Core.Models;
 using Rodentia.Core.Models.Lessons;
 using Rodentia.Core.Services;
 using Xunit;
@@ -12,12 +13,24 @@ namespace Rodentia.Tests.Services;
 public class LessonRescheduleRequestServiceTests
 {
     private readonly Mock<ILessonRescheduleRequestRepository> _repositoryMock;
+    private readonly Mock<INotificationService> _notificationServiceMock;
     private readonly LessonRescheduleRequestService _service;
 
     public LessonRescheduleRequestServiceTests()
     {
         _repositoryMock = new Mock<ILessonRescheduleRequestRepository>();
-        _service = new LessonRescheduleRequestService(_repositoryMock.Object);
+        _notificationServiceMock = new Mock<INotificationService>();
+        _notificationServiceMock
+            .Setup(x => x.NotifyAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<NotificationType>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+
+        _service = new LessonRescheduleRequestService(_repositoryMock.Object, _notificationServiceMock.Object);
     }
 
     [Fact]
@@ -109,6 +122,13 @@ public class LessonRescheduleRequestServiceTests
         Assert.NotEqual(Guid.Empty, result.Data);
         _repositoryMock.Verify(x => x.AddAsync(It.IsAny<LessonRescheduleRequest>(), It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _notificationServiceMock.Verify(x => x.NotifyAsync(
+            It.IsAny<Guid>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            NotificationType.LessonRescheduleRequested,
+            lesson.Id,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

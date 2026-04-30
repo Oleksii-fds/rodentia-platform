@@ -1,5 +1,6 @@
 #nullable enable
 
+using System.Globalization;
 using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
 using Rodentia.Core.Models;
@@ -10,10 +11,14 @@ namespace Rodentia.Core.Services;
 public sealed class LessonRescheduleRequestService : ILessonRescheduleRequestService
 {
     private readonly ILessonRescheduleRequestRepository _repository;
+    private readonly INotificationService _notificationService;
 
-    public LessonRescheduleRequestService(ILessonRescheduleRequestRepository repository)
+    public LessonRescheduleRequestService(
+        ILessonRescheduleRequestRepository repository,
+        INotificationService notificationService)
     {
         _repository = repository;
+        _notificationService = notificationService;
     }
 
     public async Task<Result<Guid>> CreateRequestAsync(
@@ -69,6 +74,17 @@ public sealed class LessonRescheduleRequestService : ILessonRescheduleRequestSer
 
         await _repository.AddAsync(rescheduleRequest, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
+        var recipientId = GetOtherParticipantId(actorUserId, lesson);
+        var subject = string.IsNullOrWhiteSpace(lesson.Subject) ? "Заняття" : lesson.Subject.Trim();
+        var currentWhen = FormatLessonDateTime(lesson.ScheduledAt);
+        var proposedWhen = FormatLessonDateTime(proposedScheduledAt);
+        await _notificationService.NotifyAsync(
+            recipientId,
+            $"Запит на перенесення: «{subject}»",
+            $"Урок «{subject}»: зараз {currentWhen}. Пропоную перенести на {proposedWhen}. Причина: {request.Reason.Trim()}",
+            NotificationType.LessonRescheduleRequested,
+            lesson.Id,
+            cancellationToken);
 
         return Result<Guid>.SuccessData(rescheduleRequest.Id);
     }
@@ -108,12 +124,21 @@ public sealed class LessonRescheduleRequestService : ILessonRescheduleRequestSer
         if (hasConflict)
             return Result.Failure("На запропонований час є конфлікт у розкладі.");
 
+        var previousScheduledAt = lesson.ScheduledAt;
         lesson.ScheduledAt = request.ProposedScheduledAt;
         request.Status = LessonRescheduleRequestStatus.Approved;
         request.ReviewedByUserId = actorUserId;
         request.ReviewedAt = DateTime.UtcNow;
 
         await _repository.SaveChangesAsync(cancellationToken);
+        var subjectApproved = string.IsNullOrWhiteSpace(lesson.Subject) ? "Заняття" : lesson.Subject.Trim();
+        await _notificationService.NotifyAsync(
+            request.RequestedByUserId,
+            $"Перенесення підтверджено: «{subjectApproved}»",
+            $"Урок «{subjectApproved}»: перенесення підтверджено. Було {FormatLessonDateTime(previousScheduledAt)}, тепер {FormatLessonDateTime(lesson.ScheduledAt)}.",
+            NotificationType.LessonRescheduleApproved,
+            lesson.Id,
+            cancellationToken);
         return Result.Ok();
     }
 
@@ -148,6 +173,16 @@ public sealed class LessonRescheduleRequestService : ILessonRescheduleRequestSer
         entity.ReviewedAt = DateTime.UtcNow;
 
         await _repository.SaveChangesAsync(cancellationToken);
+        var subjectRejected = string.IsNullOrWhiteSpace(lesson.Subject) ? "Заняття" : lesson.Subject.Trim();
+        var proposedWhenRejected = FormatLessonDateTime(entity.ProposedScheduledAt);
+        var currentWhenRejected = FormatLessonDateTime(lesson.ScheduledAt);
+        await _notificationService.NotifyAsync(
+            entity.RequestedByUserId,
+            $"Перенесення відхилено: «{subjectRejected}»",
+            $"Урок «{subjectRejected}»: запит перенести на {proposedWhenRejected} (зараз у розкладі {currentWhenRejected}) відхилено. Коментар: {request.Reason.Trim()}",
+            NotificationType.LessonRescheduleRejected,
+            lesson.Id,
+            cancellationToken);
         return Result.Ok();
     }
 
@@ -182,4 +217,19 @@ public sealed class LessonRescheduleRequestService : ILessonRescheduleRequestSer
 
     private static bool IsParticipant(Guid userId, Lesson lesson)
         => lesson.TeacherId == userId || lesson.StudentId == userId;
+
+    private static Guid GetOtherParticipantId(Guid actorUserId, Lesson lesson)
+        => lesson.TeacherId == actorUserId ? lesson.StudentId : lesson.TeacherId;
+
+    private static string FormatLessonDateTime(DateTime value)
+    {
+        var utc = value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
+
+        return utc.ToString("dd.MM.yyyy HH:mm", CultureInfo.GetCultureInfo("uk-UA")) + " UTC";
+    }
 }
