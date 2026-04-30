@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Rodentia.Core.Interfaces;
+using Rodentia.Web.Filters;
 using Rodentia.Web.Models;
 
 namespace Rodentia.Web.Controllers;
@@ -18,6 +19,7 @@ public class HomeController : Controller
         _geoTimeZoneService = geoTimeZoneService;
     }
 
+    [RateLimitByIp(60)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         var visitorIp = ResolveClientIpAddress();
@@ -29,6 +31,7 @@ public class HomeController : Controller
         return View();
     }
 
+    [RateLimitByIp(30)]
     public IActionResult Privacy()
     {
         return View();

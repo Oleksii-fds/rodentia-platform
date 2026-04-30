@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Rodentia.Core.Interfaces;
 using Rodentia.Core.Models.Lessons;
+using Rodentia.Web.Filters;
 using Rodentia.Web.Models.Lessons;
 
 namespace Rodentia.Web.Controllers;
@@ -11,6 +12,7 @@ namespace Rodentia.Web.Controllers;
 public class ScheduleController(ILessonService lessonService) : BaseController
 {
     [HttpGet]
+    [RateLimitByIp(40)]
     public async Task<IActionResult> Index(DateTime? date)
     {
         var referenceDate = date ?? DateTime.Today;
