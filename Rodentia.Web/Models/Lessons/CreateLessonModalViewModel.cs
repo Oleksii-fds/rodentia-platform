@@ -51,5 +51,19 @@ public sealed class CreateLessonModalViewModel
     [Display(Name = "Успіхи та проблеми учня")]
     public string ProgressNote { get; set; }
 
+    [Display(Name = "Періодичні заняття")]
+    public bool IsRecurring { get; set; }
+
+    [Display(Name = "До якої дати повторювати")]
+    [DataType(DataType.Date)]
+    public DateTime? RecurrenceEndDate { get; set; }
+
+    [Range(1, 8, ErrorMessage = "Інтервал повторення має бути від 1 до 8 тижнів.")]
+    [Display(Name = "Повторювати кожні (тижнів)")]
+    public int RepeatEveryWeeks { get; set; } = 1;
+
+    [Display(Name = "Дні тижня")]
+    public List<DayOfWeek> RecurrenceDaysOfWeek { get; set; } = [];
+
     public List<SelectListItem> StudentOptions { get; set; } = [];
 }

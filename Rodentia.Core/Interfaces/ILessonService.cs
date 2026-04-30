@@ -17,6 +17,10 @@ public interface ILessonService
         Guid teacherId,
         CreateLessonRequest request,
         CancellationToken cancellationToken = default);
+    Task<Result<RecurringLessonCreationResultDto>> CreateRecurringLessonsAsync(
+        Guid teacherId,
+        CreateRecurringLessonsRequest request,
+        CancellationToken cancellationToken = default);
     Task<Result<EditLessonModalDto>> GetEditLessonModalDataAsync(
         Guid teacherId, 
         Guid lessonId, 

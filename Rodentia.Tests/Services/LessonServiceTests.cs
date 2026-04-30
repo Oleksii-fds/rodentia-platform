@@ -498,6 +498,115 @@ public class LessonServiceTests
         _repoMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task CreateRecurringLessonsAsync_ShouldFail_WhenNoDaysSelected()
+    {
+        var teacher = BuildUser(UserRole.Teacher);
+        _repoMock
+            .Setup(x => x.GetUserByIdAsync(teacher.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(teacher);
+
+        var request = new CreateRecurringLessonsRequest
+        {
+            StudentId = Guid.NewGuid(),
+            StartDate = DateTime.Today.AddDays(1),
+            EndDate = DateTime.Today.AddDays(30),
+            StartTime = TimeSpan.FromHours(10),
+            RepeatEveryWeeks = 1,
+            DaysOfWeek = [],
+            DurationMinutes = 60,
+            Subject = "Математика"
+        };
+
+        var result = await _service.CreateRecurringLessonsAsync(teacher.Id, request);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Оберіть хоча б один день тижня.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task CreateRecurringLessonsAsync_ShouldCreateSeries_WhenValid()
+    {
+        var teacher = BuildUser(UserRole.Teacher);
+        var studentId = Guid.NewGuid();
+
+        _repoMock
+            .Setup(x => x.GetUserByIdAsync(teacher.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(teacher);
+        _repoMock
+            .Setup(x => x.IsTeacherStudentLinkActiveAsync(teacher.Id, studentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _repoMock
+            .Setup(x => x.HasConflictAsync(
+                teacher.Id, studentId, It.IsAny<DateTime>(), It.IsAny<int>(), null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var request = new CreateRecurringLessonsRequest
+        {
+            StudentId = studentId,
+            StartDate = new DateTime(2026, 5, 4),
+            EndDate = new DateTime(2026, 5, 18),
+            StartTime = TimeSpan.FromHours(10),
+            RepeatEveryWeeks = 1,
+            DaysOfWeek = [DayOfWeek.Monday],
+            DurationMinutes = 60,
+            Subject = "Математика"
+        };
+
+        var result = await _service.CreateRecurringLessonsAsync(teacher.Id, request);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(3, result.Data!.CreatedCount);
+        _repoMock.Verify(x => x.AddAsync(It.IsAny<Lesson>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
+        _repoMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateRecurringLessonsAsync_ShouldSkipConflicts_AndReturnPartialResult()
+    {
+        var teacher = BuildUser(UserRole.Teacher);
+        var studentId = Guid.NewGuid();
+
+        _repoMock
+            .Setup(x => x.GetUserByIdAsync(teacher.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(teacher);
+        _repoMock
+            .Setup(x => x.IsTeacherStudentLinkActiveAsync(teacher.Id, studentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var conflictCall = 0;
+        _repoMock
+            .Setup(x => x.HasConflictAsync(
+                teacher.Id, studentId, It.IsAny<DateTime>(), It.IsAny<int>(), null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                conflictCall++;
+                return conflictCall == 2;
+            });
+
+        var request = new CreateRecurringLessonsRequest
+        {
+            StudentId = studentId,
+            StartDate = new DateTime(2026, 5, 4),
+            EndDate = new DateTime(2026, 5, 18),
+            StartTime = TimeSpan.FromHours(10),
+            RepeatEveryWeeks = 1,
+            DaysOfWeek = [DayOfWeek.Monday],
+            DurationMinutes = 60,
+            Subject = "Математика"
+        };
+
+        var result = await _service.CreateRecurringLessonsAsync(teacher.Id, request);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(2, result.Data!.CreatedCount);
+        Assert.Single(result.Data.Skipped);
+        Assert.Equal("Конфлікт у розкладі.", result.Data.Skipped[0].Reason);
+        _repoMock.Verify(x => x.AddAsync(It.IsAny<Lesson>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
     private static User BuildUser(UserRole role) => new()
     {
         Id = Guid.NewGuid(),

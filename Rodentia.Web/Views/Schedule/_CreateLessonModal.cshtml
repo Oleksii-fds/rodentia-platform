@@ -87,6 +87,35 @@
                     <textarea asp-for="ProgressNote" class="form-control" rows="2"
                               placeholder="Опишіть успіхи та проблеми учня на занятті..."></textarea>
                 </div>
+
+                <hr />
+                <div class="mb-2 d-flex align-items-center gap-2">
+                    <input asp-for="IsRecurring" type="checkbox" class="form-check-input" id="create-is-recurring" />
+                    <label class="form-check-label fw-semibold" for="create-is-recurring">Створити серію (періодичні заняття)</label>
+                </div>
+
+                <div id="recurring-options" class="border rounded p-3 bg-light d-none">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="RecurrenceEndDate" class="form-label"></label>
+                            <input asp-for="RecurrenceEndDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="RepeatEveryWeeks" class="form-label"></label>
+                            <input asp-for="RepeatEveryWeeks" type="number" min="1" max="8" class="form-control" />
+                        </div>
+                    </div>
+                    <label class="form-label">Повторювати в дні:</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        <label><input type="checkbox" name="RecurrenceDaysOfWeek" value="Monday" class="form-check-input me-1" />Пн</label>
+                        <label><input type="checkbox" name="RecurrenceDaysOfWeek" value="Tuesday" class="form-check-input me-1" />Вт</label>
+                        <label><input type="checkbox" name="RecurrenceDaysOfWeek" value="Wednesday" class="form-check-input me-1" />Ср</label>
+                        <label><input type="checkbox" name="RecurrenceDaysOfWeek" value="Thursday" class="form-check-input me-1" />Чт</label>
+                        <label><input type="checkbox" name="RecurrenceDaysOfWeek" value="Friday" class="form-check-input me-1" />Пт</label>
+                        <label><input type="checkbox" name="RecurrenceDaysOfWeek" value="Saturday" class="form-check-input me-1" />Сб</label>
+                        <label><input type="checkbox" name="RecurrenceDaysOfWeek" value="Sunday" class="form-check-input me-1" />Нд</label>
+                    </div>
+                </div>
             </div>
 
             <div class="lesson-modal-footer">

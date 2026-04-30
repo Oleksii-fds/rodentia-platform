@@ -51,6 +51,7 @@ function bindCreateLessonModal(modalRoot) {
 
     closeButtons.forEach(btn => btn.addEventListener("click", () => { modalRoot.innerHTML = ""; }));
     overlay.addEventListener("click", e => { if (e.target === overlay) modalRoot.innerHTML = ""; });
+    bindRecurringLessonOptions(modalRoot);
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -74,6 +75,19 @@ function bindCreateLessonModal(modalRoot) {
         errorsBox.innerHTML = errors.map(e => `<div>${escapeHtml(e)}</div>`).join("");
         errorsBox.classList.add("is-visible");
     });
+}
+
+function bindRecurringLessonOptions(modalRoot) {
+    const recurringCheckbox = modalRoot.querySelector("#create-is-recurring");
+    const recurringOptions = modalRoot.querySelector("#recurring-options");
+    if (!recurringCheckbox || !recurringOptions) return;
+
+    const toggleRecurringOptions = () => {
+        recurringOptions.classList.toggle("d-none", !recurringCheckbox.checked);
+    };
+
+    recurringCheckbox.addEventListener("change", toggleRecurringOptions);
+    toggleRecurringOptions();
 }
 
 function bindEditLessonModal(modalRoot) {

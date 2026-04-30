@@ -89,6 +89,41 @@ public class ScheduleController(
             ProgressNote = model.ProgressNote     
         };
 
+        if (model.IsRecurring)
+        {
+            var recurrenceRequest = new CreateRecurringLessonsRequest
+            {
+                StudentId = model.StudentId,
+                StartDate = model.LessonDate,
+                EndDate = model.RecurrenceEndDate ?? model.LessonDate,
+                StartTime = startTime,
+                RepeatEveryWeeks = model.RepeatEveryWeeks,
+                DaysOfWeek = model.RecurrenceDaysOfWeek,
+                DurationMinutes = model.DurationMinutes,
+                Subject = model.Subject,
+                Topic = model.Topic,
+                Price = model.Price,
+                Status = model.Status,
+                IsPaid = model.IsPaid,
+                Notes = model.Notes,
+                Homework = model.Homework,
+                MaterialLinks = model.MaterialLinks,
+                ProgressNote = model.ProgressNote
+            };
+
+            var recurringResult = await lessonService.CreateRecurringLessonsAsync(CurrentUserId, recurrenceRequest, cancellationToken);
+            if (!recurringResult.IsSuccess || recurringResult.Data is null)
+                return BadRequest(new { message = recurringResult.ErrorMessage ?? "Не вдалося створити серію занять." });
+
+            var skippedCount = recurringResult.Data.Skipped.Count;
+            return Ok(new
+            {
+                message = $"Серію створено: {recurringResult.Data.CreatedCount} занять. Пропущено: {skippedCount}.",
+                createdCount = recurringResult.Data.CreatedCount,
+                skippedCount
+            });
+        }
+
         var result = await lessonService.CreateLessonAsync(CurrentUserId, request, cancellationToken);
 
         if (!result.IsSuccess)

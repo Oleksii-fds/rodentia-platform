@@ -154,6 +154,97 @@ public sealed class LessonService : ILessonService
         return Result.Ok();
     }
 
+    public async Task<Result<RecurringLessonCreationResultDto>> CreateRecurringLessonsAsync(
+        Guid teacherId,
+        CreateRecurringLessonsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var teacher = await _lessonRepository.GetUserByIdAsync(teacherId, cancellationToken);
+        if (teacher is null) return Result<RecurringLessonCreationResultDto>.Failure("Користувача не знайдено.");
+        if (teacher.Role != UserRole.Teacher) return Result<RecurringLessonCreationResultDto>.Failure("Лише викладач може створювати заняття.");
+        if (request.StudentId == Guid.Empty) return Result<RecurringLessonCreationResultDto>.Failure("Оберіть дійсного учня.");
+        if (request.StartDate == default || request.EndDate == default) return Result<RecurringLessonCreationResultDto>.Failure("Вкажіть коректний період.");
+        if (request.EndDate.Date < request.StartDate.Date) return Result<RecurringLessonCreationResultDto>.Failure("Дата завершення не може бути раніше дати початку.");
+        if (request.RepeatEveryWeeks < 1) return Result<RecurringLessonCreationResultDto>.Failure("Інтервал повторення має бути не менше 1 тижня.");
+        if (request.DaysOfWeek.Count == 0) return Result<RecurringLessonCreationResultDto>.Failure("Оберіть хоча б один день тижня.");
+        if (request.DurationMinutes < _options.MinLessonDurationMinutes)
+            return Result<RecurringLessonCreationResultDto>.Failure($"Тривалість не може бути меншою за {_options.MinLessonDurationMinutes} хвилин.");
+        if (request.DurationMinutes > _options.MaxLessonDurationMinutes)
+            return Result<RecurringLessonCreationResultDto>.Failure($"Тривалість не може перевищувати {_options.MaxLessonDurationMinutes} хвилин.");
+        if (string.IsNullOrWhiteSpace(request.Subject))
+            return Result<RecurringLessonCreationResultDto>.Failure("Вкажіть дисципліну.");
+
+        var linkIsActive = await _lessonRepository.IsTeacherStudentLinkActiveAsync(
+            teacherId, request.StudentId, cancellationToken);
+        if (!linkIsActive) return Result<RecurringLessonCreationResultDto>.Failure("Цей учень не прикріплений до викладача.");
+
+        var maxDate = DateTime.Today.AddDays(_options.ScheduleAheadDays);
+        var selectedDays = request.DaysOfWeek.Distinct().ToHashSet();
+        var createdCount = 0;
+        var skipped = new List<RecurringLessonSkipDto>();
+        var startWeek = GetWeekStart(request.StartDate.Date);
+
+        for (var date = request.StartDate.Date; date <= request.EndDate.Date; date = date.AddDays(1))
+        {
+            if (!selectedDays.Contains(date.DayOfWeek))
+                continue;
+
+            var weekStart = GetWeekStart(date);
+            var weeksBetween = (int)((weekStart - startWeek).TotalDays / 7);
+            if (weeksBetween % request.RepeatEveryWeeks != 0)
+                continue;
+
+            if (date > maxDate)
+            {
+                skipped.Add(new RecurringLessonSkipDto { LessonDate = date, Reason = "Поза дозволеним горизонтом планування." });
+                continue;
+            }
+
+            var localScheduledAt = date + request.StartTime;
+            var scheduledAt = DateTime.SpecifyKind(localScheduledAt, DateTimeKind.Utc);
+
+            var hasConflict = await _lessonRepository.HasConflictAsync(
+                teacherId, request.StudentId, scheduledAt, request.DurationMinutes, null, cancellationToken);
+            if (hasConflict)
+            {
+                skipped.Add(new RecurringLessonSkipDto { LessonDate = date, Reason = "Конфлікт у розкладі." });
+                continue;
+            }
+
+            var lesson = new Lesson
+            {
+                TeacherId = teacherId,
+                StudentId = request.StudentId,
+                Subject = request.Subject.Trim(),
+                Topic = string.IsNullOrWhiteSpace(request.Topic) ? null : request.Topic.Trim(),
+                ScheduledAt = scheduledAt,
+                DurationMinutes = request.DurationMinutes,
+                Price = request.Price,
+                Status = request.Status,
+                IsPaid = request.IsPaid,
+                Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(),
+                Homework = string.IsNullOrWhiteSpace(request.Homework) ? null : request.Homework.Trim(),
+                MaterialLinks = string.IsNullOrWhiteSpace(request.MaterialLinks) ? null : request.MaterialLinks.Trim(),
+                ProgressNote = string.IsNullOrWhiteSpace(request.ProgressNote) ? null : request.ProgressNote.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _lessonRepository.AddAsync(lesson, cancellationToken);
+            createdCount++;
+        }
+
+        if (createdCount == 0)
+            return Result<RecurringLessonCreationResultDto>.Failure("Не вдалося створити жодного заняття за вказаними параметрами.");
+
+        await _lessonRepository.SaveChangesAsync(cancellationToken);
+
+        return Result<RecurringLessonCreationResultDto>.SuccessData(new RecurringLessonCreationResultDto
+        {
+            CreatedCount = createdCount,
+            Skipped = skipped
+        });
+    }
+
     public async Task<Result<EditLessonModalDto>> GetEditLessonModalDataAsync(
         Guid teacherId, Guid lessonId, CancellationToken cancellationToken = default)
     {
@@ -348,4 +439,10 @@ public sealed class LessonService : ILessonService
     }
 
     private static string GetStudentsCacheKey(Guid teacherId) => $"teacher:{teacherId}:students";
+
+    private static DateTime GetWeekStart(DateTime date)
+    {
+        var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+        return date.AddDays(-diff);
+    }
 }
