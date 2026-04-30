@@ -2,7 +2,269 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="home-page">
+    <section class="home-hero">
+        <div class="home-hero__badge">Rodentia Platform</div>
+        <h1 class="home-hero__title">Панель часу та часових поясів</h1>
+        <p class="home-hero__subtitle">
+            Відстежуйте локальний час і швидко порівнюйте його з іншими країнами для зручного планування занять.
+        </p>
+    </section>
+
+    <section class="home-cards">
+        <article class="home-card">
+            <h5 class="home-card__title">Ваша країна і час</h5>
+            <div class="home-card__row">
+                <span class="home-card__label">Країна/місто</span>
+                <span class="home-card__value">@ViewData["VisitorLocation"]</span>
+            </div>
+            <div class="home-card__row">
+                <span class="home-card__label">Часовий пояс</span>
+                <span class="home-card__value" id="visitor-timezone">@ViewData["VisitorTimeZone"]</span>
+            </div>
+            <div class="home-card__row home-card__row--time">
+                <span class="home-card__label">Поточний час</span>
+                <span class="home-card__time" id="visitor-local-time">@ViewData["VisitorLocalTime"]</span>
+            </div>
+        </article>
+
+        <article class="home-card">
+            <h5 class="home-card__title">Час інших країн</h5>
+            <div class="home-card__controls">
+                <select id="timezone-select" class="form-select">
+                    <option value="Europe/Kyiv">Україна (Europe/Kyiv)</option>
+                    <option value="Europe/Warsaw">Польща (Europe/Warsaw)</option>
+                    <option value="Europe/Prague">Чехія (Europe/Prague)</option>
+                    <option value="Europe/Vienna">Австрія (Europe/Vienna)</option>
+                    <option value="Europe/Budapest">Угорщина (Europe/Budapest)</option>
+                    <option value="Europe/Bucharest">Румунія (Europe/Bucharest)</option>
+                    <option value="Europe/Sofia">Болгарія (Europe/Sofia)</option>
+                    <option value="Europe/Athens">Греція (Europe/Athens)</option>
+                    <option value="Europe/Vilnius">Литва (Europe/Vilnius)</option>
+                    <option value="Europe/Riga">Латвія (Europe/Riga)</option>
+                    <option value="Europe/Tallinn">Естонія (Europe/Tallinn)</option>
+                    <option value="Europe/Chisinau">Молдова (Europe/Chisinau)</option>
+                    <option value="Europe/Zurich">Швейцарія (Europe/Zurich)</option>
+                    <option value="Europe/Brussels">Бельгія (Europe/Brussels)</option>
+                    <option value="Europe/Amsterdam">Нідерланди (Europe/Amsterdam)</option>
+                    <option value="Europe/Luxembourg">Люксембург (Europe/Luxembourg)</option>
+                    <option value="Europe/Copenhagen">Данія (Europe/Copenhagen)</option>
+                    <option value="Europe/Oslo">Норвегія (Europe/Oslo)</option>
+                    <option value="Europe/Stockholm">Швеція (Europe/Stockholm)</option>
+                    <option value="Europe/Helsinki">Фінляндія (Europe/Helsinki)</option>
+                    <option value="Europe/Dublin">Ірландія (Europe/Dublin)</option>
+                    <option value="Europe/Lisbon">Португалія (Europe/Lisbon)</option>
+                    <option value="Europe/Madrid">Іспанія (Europe/Madrid)</option>
+                    <option value="Europe/Rome">Італія (Europe/Rome)</option>
+                    <option value="Europe/Belgrade">Сербія (Europe/Belgrade)</option>
+                    <option value="Europe/Skopje">Північна Македонія (Europe/Skopje)</option>
+                    <option value="Europe/Sarajevo">Боснія і Герцеговина (Europe/Sarajevo)</option>
+                    <option value="Europe/Zagreb">Хорватія (Europe/Zagreb)</option>
+                    <option value="Europe/Ljubljana">Словенія (Europe/Ljubljana)</option>
+                    <option value="Europe/Bratislava">Словаччина (Europe/Bratislava)</option>
+                    <option value="Europe/Paris">Франція (Europe/Paris)</option>
+                    <option value="Europe/London">Велика Британія (Europe/London)</option>
+                    <option value="Europe/Berlin">Німеччина (Europe/Berlin)</option>
+                    <option value="America/New_York">США, Нью-Йорк (America/New_York)</option>
+                    <option value="America/Los_Angeles">США, Лос-Анджелес (America/Los_Angeles)</option>
+                    <option value="Asia/Tokyo">Японія (Asia/Tokyo)</option>
+                    <option value="Australia/Sydney">Австралія (Australia/Sydney)</option>
+                </select>
+                <button type="button" id="add-timezone-btn" class="btn btn-warning">Додати</button>
+            </div>
+            <div id="timezone-list" class="home-timezone-list"></div>
+        </article>
+    </div>
+    </section>
 </div>
+
+<style>
+    .home-page {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 24px 12px;
+    }
+
+    .home-hero {
+        background: linear-gradient(135deg, #fff7ed 0%, #ffe8cc 100%);
+        border: 1px solid #ffd7a8;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 8px 20px rgba(180, 110, 20, 0.08);
+    }
+
+    .home-hero__badge {
+        display: inline-block;
+        background: #fff;
+        color: #9a5300;
+        border: 1px solid #ffd5a0;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        margin-bottom: 10px;
+    }
+
+    .home-hero__title {
+        margin: 0 0 10px;
+        font-size: clamp(1.5rem, 2.2vw, 2rem);
+        font-weight: 700;
+        color: #5d3300;
+    }
+
+    .home-hero__subtitle {
+        margin: 0;
+        color: #7d4a0d;
+    }
+
+    .home-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+    }
+
+    .home-card {
+        background: #fff;
+        border: 1px solid #f1e5d5;
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 8px 18px rgba(42, 31, 20, 0.05);
+    }
+
+    .home-card__title {
+        margin: 0 0 14px;
+        font-weight: 700;
+        color: #5a3412;
+    }
+
+    .home-card__row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px dashed #eee1d1;
+    }
+
+    .home-card__row:last-child {
+        border-bottom: 0;
+    }
+
+    .home-card__label {
+        color: #8a5a2b;
+        font-weight: 600;
+    }
+
+    .home-card__value {
+        color: #3f2c16;
+        text-align: right;
+    }
+
+    .home-card__row--time .home-card__time {
+        font-family: Consolas, "Courier New", monospace;
+        font-weight: 700;
+        color: #aa4f00;
+    }
+
+    .home-card__controls {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+    }
+
+    .home-timezone-list {
+        margin-top: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const select = document.getElementById("timezone-select");
+        const addButton = document.getElementById("add-timezone-btn");
+        const list = document.getElementById("timezone-list");
+        const serverTimeZone = document.getElementById("visitor-timezone")?.textContent?.trim();
+        const visitorTimeElement = document.getElementById("visitor-local-time");
+        const visitorTimeZoneElement = document.getElementById("visitor-timezone");
+        const trackedZones = new Map();
+        const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const visitorTimeZone = (!serverTimeZone || serverTimeZone === "UTC")
+            ? browserTimeZone
+            : serverTimeZone;
+
+        function formatNow(timeZone) {
+            return new Intl.DateTimeFormat("uk-UA", {
+                timeZone,
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }).format(new Date());
+        }
+
+        function refreshTimes() {
+            trackedZones.forEach((value, timeZone) => {
+                value.timeElement.textContent = formatNow(timeZone);
+            });
+
+            if (visitorTimeZone && visitorTimeElement) {
+                visitorTimeElement.textContent = formatNow(visitorTimeZone);
+            }
+        }
+
+        function addZone(timeZone, label) {
+            if (!timeZone || trackedZones.has(timeZone)) {
+                return;
+            }
+
+            const row = document.createElement("div");
+            row.className = "d-flex justify-content-between align-items-center border rounded p-2 mb-2";
+
+            const textWrap = document.createElement("div");
+            textWrap.innerHTML = `<div class="fw-semibold">${label}</div><div class="text-muted small">${timeZone}</div>`;
+
+            const timeElement = document.createElement("div");
+            timeElement.className = "fw-bold";
+            timeElement.textContent = formatNow(timeZone);
+
+            const removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.className = "btn btn-sm btn-outline-danger ms-2";
+            removeButton.textContent = "x";
+            removeButton.addEventListener("click", () => {
+                trackedZones.delete(timeZone);
+                row.remove();
+            });
+
+            const rightWrap = document.createElement("div");
+            rightWrap.className = "d-flex align-items-center";
+            rightWrap.appendChild(timeElement);
+            rightWrap.appendChild(removeButton);
+
+            row.appendChild(textWrap);
+            row.appendChild(rightWrap);
+            list.appendChild(row);
+
+            trackedZones.set(timeZone, { timeElement });
+        }
+
+        addButton?.addEventListener("click", () => {
+            const option = select?.selectedOptions?.[0];
+            if (!option) {
+                return;
+            }
+
+            addZone(option.value, option.text);
+        });
+
+        if (visitorTimeZoneElement) {
+            visitorTimeZoneElement.textContent = visitorTimeZone;
+        }
+
+        setInterval(refreshTimes, 1000);
+        refreshTimes();
+    });
+</script>

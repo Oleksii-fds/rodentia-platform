@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Rodentia.Core.Entities;
 using Rodentia.Core.Interfaces;
 using Rodentia.Core.Models;
@@ -27,6 +28,8 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.Configure<RodentiaOptions>(
     builder.Configuration.GetSection(RodentiaOptions.SectionName));
+builder.Services.Configure<GeoTimeZoneOptions>(
+    builder.Configuration.GetSection(GeoTimeZoneOptions.SectionName));
 
 
 if (builder.Environment.EnvironmentName != "Testing")
@@ -47,6 +50,14 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddHttpClient<IGeoTimeZoneClient, IpWhoIsGeoTimeZoneClient>((serviceProvider, client) =>
+{
+    var options = serviceProvider.GetRequiredService<IOptions<GeoTimeZoneOptions>>().Value;
+    client.BaseAddress = new Uri(options.BaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("RodentiaPlatform/1.0");
+});
+builder.Services.AddScoped<IGeoTimeZoneService, GeoTimeZoneService>();
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
