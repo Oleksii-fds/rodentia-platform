@@ -9,7 +9,9 @@ using Rodentia.Web.Models.Lessons;
 namespace Rodentia.Web.Controllers;
 
 [Authorize]
-public class ScheduleController(ILessonService lessonService) : BaseController
+public class ScheduleController(
+    ILessonService lessonService,
+    ILessonRescheduleRequestService lessonRescheduleRequestService) : BaseController
 {
     [HttpGet]
     [RateLimitByIp(40)]
@@ -181,6 +183,85 @@ public class ScheduleController(ILessonService lessonService) : BaseController
             return BadRequest(new { message = result.ErrorMessage ?? "Не вдалося оновити заняття." });
 
         return Ok(new { message = "Заняття успішно оновлено." });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateRescheduleRequest(
+        Guid lessonId,
+        DateTime lessonDate,
+        string startTime,
+        string reason,
+        CancellationToken cancellationToken)
+    {
+        if (!TimeSpan.TryParse(startTime, out var parsedStartTime))
+            return BadRequest(new { message = "Некоректний формат часу." });
+
+        var request = new CreateLessonRescheduleRequest
+        {
+            LessonId = lessonId,
+            LessonDate = lessonDate,
+            StartTime = parsedStartTime,
+            Reason = reason
+        };
+
+        var result = await lessonRescheduleRequestService.CreateRequestAsync(CurrentUserId, request, cancellationToken);
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage ?? "Не вдалося створити запит на перенесення." });
+
+        return Ok(new { message = "Запит на перенесення створено.", requestId = result.Data });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveRescheduleRequest(Guid requestId, CancellationToken cancellationToken)
+    {
+        var result = await lessonRescheduleRequestService.ApproveRequestAsync(CurrentUserId, requestId, cancellationToken);
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage ?? "Не вдалося підтвердити запит." });
+
+        return Ok(new { message = "Запит на перенесення підтверджено." });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectRescheduleRequest(
+        Guid requestId,
+        string reason,
+        CancellationToken cancellationToken)
+    {
+        var request = new RejectLessonRescheduleRequest
+        {
+            RequestId = requestId,
+            Reason = reason
+        };
+
+        var result = await lessonRescheduleRequestService.RejectRequestAsync(CurrentUserId, request, cancellationToken);
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage ?? "Не вдалося відхилити запит." });
+
+        return Ok(new { message = "Запит на перенесення відхилено." });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> RescheduleRequests(Guid lessonId, CancellationToken cancellationToken)
+    {
+        var result = await lessonRescheduleRequestService.GetPendingRequestsForLessonAsync(CurrentUserId, lessonId, cancellationToken);
+        if (!result.IsSuccess || result.Data is null)
+            return BadRequest(new { message = result.ErrorMessage ?? "Не вдалося отримати запити на перенесення." });
+
+        return Ok(new
+        {
+            items = result.Data.Select(x => new
+            {
+                requestId = x.RequestId,
+                requestedByUserId = x.RequestedByUserId,
+                proposedScheduledAt = x.ProposedScheduledAt,
+                reason = x.Reason,
+                createdAt = x.CreatedAt,
+                canReview = x.CanReview
+            })
+        });
     }
 
     [HttpPost]

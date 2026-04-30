@@ -60,6 +60,8 @@ builder.Services.AddHttpClient<IGeoTimeZoneClient, IpWhoIsGeoTimeZoneClient>((se
 builder.Services.AddScoped<IGeoTimeZoneService, GeoTimeZoneService>();
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<ILessonService, LessonService>();
+builder.Services.AddScoped<ILessonRescheduleRequestRepository, LessonRescheduleRequestRepository>();
+builder.Services.AddScoped<ILessonRescheduleRequestService, LessonRescheduleRequestService>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();

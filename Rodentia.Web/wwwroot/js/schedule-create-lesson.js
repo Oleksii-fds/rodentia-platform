@@ -109,6 +109,10 @@ function bindEditLessonModal(modalRoot) {
         errorsBox.innerHTML = errors.map(e => `<div>${escapeHtml(e)}</div>`).join("");
         errorsBox.classList.add("is-visible");
     });
+
+    const token = form.querySelector('input[name="__RequestVerificationToken"]')?.value || "";
+    const lessonId = form.querySelector('input[name="LessonId"]')?.value || "";
+    bindRescheduleSection(modalRoot, lessonId, token);
 }
 
 function bindLessonDetailsModal(modalRoot) {
@@ -119,6 +123,159 @@ function bindLessonDetailsModal(modalRoot) {
 
     closeButtons.forEach(btn => btn.addEventListener("click", () => { modalRoot.innerHTML = ""; }));
     overlay.addEventListener("click", e => { if (e.target === overlay) modalRoot.innerHTML = ""; });
+
+    const token = modalRoot.querySelector('#lesson-details-actions-form input[name="__RequestVerificationToken"]')?.value || "";
+    const lessonId = modalRoot.querySelector("#reschedule-section")?.dataset.lessonId || "";
+    bindRescheduleSection(modalRoot, lessonId, token);
+}
+
+function bindRescheduleSection(modalRoot, lessonId, token) {
+    const section = modalRoot.querySelector("#reschedule-section");
+    const createButton = modalRoot.querySelector("#create-reschedule-btn");
+    const dateInput = modalRoot.querySelector("#reschedule-date");
+    const timeInput = modalRoot.querySelector("#reschedule-time");
+    const reasonInput = modalRoot.querySelector("#reschedule-reason");
+    const errorsBox = modalRoot.querySelector("#reschedule-errors");
+    const list = modalRoot.querySelector("#reschedule-requests-list");
+
+    if (!section || !createButton || !dateInput || !timeInput || !reasonInput || !errorsBox || !list || !lessonId) {
+        return;
+    }
+
+    createButton.addEventListener("click", async () => {
+        errorsBox.textContent = "";
+
+        const payload = new FormData();
+        payload.append("lessonId", lessonId);
+        payload.append("lessonDate", dateInput.value);
+        payload.append("startTime", timeInput.value);
+        payload.append("reason", reasonInput.value);
+        payload.append("__RequestVerificationToken", token);
+
+        const response = await fetch("/Schedule/CreateRescheduleRequest", {
+            method: "POST",
+            body: payload,
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+
+        if (!response.ok) {
+            const responsePayload = await response.json().catch(() => ({ message: "Не вдалося створити запит." }));
+            errorsBox.textContent = responsePayload.message || "Не вдалося створити запит.";
+            return;
+        }
+
+        dateInput.value = "";
+        timeInput.value = "";
+        reasonInput.value = "";
+        await loadRescheduleRequests(lessonId, token, list, errorsBox);
+    });
+
+    loadRescheduleRequests(lessonId, token, list, errorsBox);
+}
+
+async function loadRescheduleRequests(lessonId, token, list, errorsBox) {
+    list.innerHTML = "";
+    const response = await fetch(`/Schedule/RescheduleRequests?lessonId=${lessonId}`, {
+        method: "GET",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    if (!response.ok) {
+        const payload = await response.json().catch(() => ({ message: "Не вдалося отримати запити на перенесення." }));
+        errorsBox.textContent = payload.message || "Не вдалося отримати запити на перенесення.";
+        return;
+    }
+
+    const payload = await response.json();
+    const items = Array.isArray(payload?.items) ? payload.items : [];
+
+    if (items.length === 0) {
+        list.innerHTML = '<div class="text-muted small">Активних запитів немає.</div>';
+        return;
+    }
+
+    items.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "border rounded p-2 mb-2";
+
+        const dateText = new Date(item.proposedScheduledAt).toLocaleString("uk-UA");
+        const reason = escapeHtml(item.reason || "");
+        row.innerHTML = `
+            <div><strong>Новий час:</strong> ${dateText}</div>
+            <div><strong>Причина:</strong> ${reason}</div>
+            <div class="d-flex gap-2 mt-2" data-actions></div>
+        `;
+
+        if (item.canReview) {
+            const actions = row.querySelector("[data-actions]");
+            const approveButton = document.createElement("button");
+            approveButton.type = "button";
+            approveButton.className = "btn btn-sm btn-success";
+            approveButton.textContent = "Підтвердити";
+            approveButton.addEventListener("click", async () => {
+                await approveRescheduleRequest(item.requestId, token, lessonId, list, errorsBox);
+            });
+
+            const rejectButton = document.createElement("button");
+            rejectButton.type = "button";
+            rejectButton.className = "btn btn-sm btn-danger";
+            rejectButton.textContent = "Відхилити";
+            rejectButton.addEventListener("click", async () => {
+                const rejectReason = prompt("Вкажіть причину відхилення:");
+                if (rejectReason === null) return;
+                await rejectRescheduleRequest(item.requestId, rejectReason, token, lessonId, list, errorsBox);
+            });
+
+            actions.appendChild(approveButton);
+            actions.appendChild(rejectButton);
+        } else {
+            row.querySelector("[data-actions]").innerHTML = '<span class="text-muted small">Очікує рішення іншої сторони.</span>';
+        }
+
+        list.appendChild(row);
+    });
+}
+
+async function approveRescheduleRequest(requestId, token, lessonId, list, errorsBox) {
+    const payload = new FormData();
+    payload.append("requestId", requestId);
+    payload.append("__RequestVerificationToken", token);
+
+    const response = await fetch("/Schedule/ApproveRescheduleRequest", {
+        method: "POST",
+        body: payload,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    if (!response.ok) {
+        const responsePayload = await response.json().catch(() => ({ message: "Не вдалося підтвердити запит." }));
+        errorsBox.textContent = responsePayload.message || "Не вдалося підтвердити запит.";
+        return;
+    }
+
+    await loadRescheduleRequests(lessonId, token, list, errorsBox);
+    window.location.reload();
+}
+
+async function rejectRescheduleRequest(requestId, reason, token, lessonId, list, errorsBox) {
+    const payload = new FormData();
+    payload.append("requestId", requestId);
+    payload.append("reason", reason);
+    payload.append("__RequestVerificationToken", token);
+
+    const response = await fetch("/Schedule/RejectRescheduleRequest", {
+        method: "POST",
+        body: payload,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    if (!response.ok) {
+        const responsePayload = await response.json().catch(() => ({ message: "Не вдалося відхилити запит." }));
+        errorsBox.textContent = responsePayload.message || "Не вдалося відхилити запит.";
+        return;
+    }
+
+    await loadRescheduleRequests(lessonId, token, list, errorsBox);
 }
 
 function requestDeleteLesson(lessonId) {
