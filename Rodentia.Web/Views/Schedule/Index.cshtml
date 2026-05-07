@@ -47,10 +47,10 @@
     </div>
 
     <div class="d-flex gap-3 mb-3 align-items-center">
-        <span class="legend-dot" style="background:#E87C1E;"></span><span class="small">Заплановано</span>
-        <span class="legend-dot" style="background:#2E7D32;"></span><span class="small">Проведено</span>
-        <span class="legend-dot" style="background:#C62828;"></span><span class="small">Скасовано</span>
-        <span class="legend-dot" style="background:#1565C0; border:2px solid #FFD700;"></span><span class="small">Оплачено</span>
+        <span class="legend-dot legend-dot--scheduled"></span><span class="small">Заплановано</span>
+        <span class="legend-dot legend-dot--completed"></span><span class="small">Проведено</span>
+        <span class="legend-dot legend-dot--canceled"></span><span class="small">Скасовано</span>
+        <span class="legend-dot legend-dot--paid"></span><span class="small">Оплачено</span>
     </div>
 
     <div class="schedule-wrapper shadow-sm rounded border">
@@ -62,8 +62,7 @@
                         @for (int i = 0; i < 7; i++)
                         {
                             var currentDay = startOfWeek.AddDays(i);
-                            <th style="border-color: #FFB74D;"
-                                class="@(currentDay.Date == DateTime.Today ? "today-header" : "")">
+                            <th class="schedule-header-cell @(currentDay.Date == DateTime.Today ? "today-header" : "")">
                                 <div class="small fw-normal">@days[i]</div>
                                 <div>@currentDay.ToString("dd.MM")</div>
                             </th>
@@ -78,7 +77,7 @@
                             @for (int d = 0; d < 7; d++)
                             {
                                 var cellDate = startOfWeek.AddDays(d);
-                                <td class="lesson-slot" style="height: 60px; background-color: #FFFDFB;">
+                                <td class="lesson-slot">
                                     @{
                                         var lessonsInSlot = Model?.Where(l =>
                                         l.ScheduledAt.Date == cellDate.Date &&
@@ -92,12 +91,12 @@
                                             : "border: none;";
                                             <div class="lesson-item p-1 rounded shadow-sm text-white"
                                                  data-lesson-id="@lesson.Id"
-                                                 style="background-color: @bgColor; @borderStyle font-size: 0.75rem; cursor: pointer; margin-bottom: 2px;">
+                                                 style="background-color: @bgColor; @borderStyle">
                                                 <div class="fw-bold text-truncate">@lesson.DisplayName</div>
-                                                <div style="font-size: 0.65rem; opacity: 0.9;">@lesson.Subject</div>
+                                                <div class="lesson-subject">@lesson.Subject</div>
                                                 @if (lesson.IsPaid)
                                                 {
-                                                    <div style="font-size: 0.6rem; color: #FFD700;">₴ оплачено</div>
+                                                    <div class="lesson-paid">₴ оплачено</div>
                                                 }
                                             </div>
                                         }
@@ -114,67 +113,3 @@
 
 <div id="create-lesson-modal-root"></div>
 
-<style>
-    .schedule-wrapper {
-        background: white;
-        overflow: hidden;
-    }
-
-    .schedule-scroll-container {
-        max-height: 65vh;
-        overflow-y: auto;
-    }
-
-    .sticky-header {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        background-color: #FFA000;
-        color: white;
-    }
-
-        .sticky-header th {
-            border-color: #FFB74D !important;
-            padding: 12px 5px;
-        }
-
-    .time-col {
-        width: 80px;
-    }
-
-    .time-cell {
-        font-size: 0.85rem;
-        border-right: 2px solid #FFE4D3 !important;
-    }
-
-    .lesson-slot {
-        border: 1px solid #FFE4D3 !important;
-        padding: 4px !important;
-        vertical-align: top !important;
-    }
-
-    .lesson-item:hover {
-        transform: scale(1.02);
-        filter: brightness(1.1);
-        transition: 0.2s;
-    }
-
-    .schedule-scroll-container::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .schedule-scroll-container::-webkit-scrollbar-thumb {
-        background: #FFCC80;
-        border-radius: 10px;
-    }
-
-    .legend-dot {
-        display: inline-block;
-        width: 14px;
-        height: 14px;
-        border-radius: 3px;
-    }
-</style>
-
-<link rel="stylesheet" href="~/css/schedule-create-lesson.css" asp-append-version="true" />
-<script src="~/js/schedule-create-lesson.js" asp-append-version="true"></script>

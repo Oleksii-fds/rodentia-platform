@@ -8,18 +8,18 @@
     <div asp-validation-summary="All" class="text-danger small mb-3"></div>
     
     <div class="mb-3">
-        <input asp-for="Email" class="form-control bg-light border-0 py-2" placeholder="Email" style="border-radius: 10px;" />
+        <input asp-for="Email" class="form-control bg-light border-0 py-2 auth-input" placeholder="Email" />
     </div>
     
     <div class="mb-4">
-        <input asp-for="Password" type="password" class="form-control bg-light border-0 py-2" placeholder="Пароль" style="border-radius: 10px;" />
+        <input asp-for="Password" type="password" class="form-control bg-light border-0 py-2 auth-input" placeholder="Пароль" />
     </div>
 
-    <button type="submit" class="btn btn-warning w-100 text-white fw-bold py-2 mb-3" style="background-color: #FF6B00; border-radius: 10px;">
+    <button type="submit" class="btn w-100 py-2 mb-3 auth-submit-btn">
         Увійти
     </button>
     
     <div class="text-center">
-        <a href="#" class="text-decoration-none small" style="color: #5D5FEF;">Забули пароль? Відновити</a>
+        <a href="#" class="text-decoration-none small auth-link">Забули пароль? Відновити</a>
     </div>
 </form>

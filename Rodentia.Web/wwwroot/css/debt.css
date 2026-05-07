@@ -1,0 +1,28 @@
+.debt-total-positive {
+    color: #c62828;
+}
+
+.debt-total-zero {
+    color: #2e7d32;
+}
+
+.debt-student-card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.debt-student-header {
+    background: #fff3e0;
+    border-bottom: 1px solid #ffe0b2;
+}
+
+.debt-pay-btn {
+    background-color: #ff6b00;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+}
+
+.debt-paid-row {
+    background: #e8f5e9;
+}

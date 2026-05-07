@@ -1,0 +1,98 @@
+.schedule-wrapper {
+    background: #fff;
+    overflow: hidden;
+}
+
+.schedule-scroll-container {
+    max-height: 65vh;
+    overflow-y: auto;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #ffa000;
+    color: #fff;
+}
+
+.sticky-header th {
+    border-color: #ffb74d !important;
+    padding: 12px 5px;
+}
+
+.schedule-header-cell {
+    border-color: #ffb74d;
+}
+
+.time-col {
+    width: 80px;
+}
+
+.time-cell {
+    font-size: 0.85rem;
+    border-right: 2px solid #ffe4d3 !important;
+}
+
+.lesson-slot {
+    height: 60px;
+    background-color: #fffdfb;
+    border: 1px solid #ffe4d3 !important;
+    padding: 4px !important;
+    vertical-align: top !important;
+}
+
+.lesson-item {
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-bottom: 2px;
+}
+
+.lesson-item:hover {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+    transition: 0.2s;
+}
+
+.lesson-subject {
+    font-size: 0.65rem;
+    opacity: 0.9;
+}
+
+.lesson-paid {
+    font-size: 0.6rem;
+    color: #ffd700;
+}
+
+.schedule-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.schedule-scroll-container::-webkit-scrollbar-thumb {
+    background: #ffcc80;
+    border-radius: 10px;
+}
+
+.legend-dot {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+.legend-dot--scheduled {
+    background: #e87c1e;
+}
+
+.legend-dot--completed {
+    background: #2e7d32;
+}
+
+.legend-dot--canceled {
+    background: #c62828;
+}
+
+.legend-dot--paid {
+    background: #1565c0;
+    border: 2px solid #ffd700;
+}

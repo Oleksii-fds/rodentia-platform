@@ -292,6 +292,24 @@ async function rejectRescheduleRequest(requestId, reason, token, lessonId, list,
     await loadRescheduleRequests(lessonId, token, list, errorsBox);
 }
 
+function toggleIsPaid() {
+    const checkbox = document.getElementById("edit-is-paid-checkbox");
+    const button = document.getElementById("edit-is-paid-btn");
+    if (!checkbox || !button) {
+        return;
+    }
+
+    checkbox.checked = !checkbox.checked;
+    if (checkbox.checked) {
+        button.className = "btn w-100 btn-success";
+        button.innerHTML = "<i class=\"bi bi-check-circle-fill me-1\"></i><span>Оплачено</span>";
+        return;
+    }
+
+    button.className = "btn w-100 btn-outline-secondary";
+    button.innerHTML = "<i class=\"bi bi-circle me-1\"></i><span>Не оплачено</span>";
+}
+
 function requestDeleteLesson(lessonId) {
     const tokenEl = document.querySelector('#edit-lesson-form input[name="__RequestVerificationToken"]');
     const token = tokenEl ? tokenEl.value : '';

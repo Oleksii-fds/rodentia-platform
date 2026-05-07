@@ -9,7 +9,7 @@
         <h2 class="fw-bold m-0">💳 Аналіз заборгованості</h2>
         <div class="text-end">
             <div class="text-muted small">Загальний борг</div>
-            <div class="fw-bold fs-4" style="color: @(Model.TotalDebt > 0 ? "#C62828" : "#2E7D32")">
+            <div class="fw-bold fs-4 @(Model.TotalDebt > 0 ? "debt-total-positive" : "debt-total-zero")">
                 @Model.TotalDebt.ToString("F0") грн
             </div>
         </div>
@@ -26,9 +26,9 @@
     {
         @foreach (var student in Model.Students)
         {
-            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
+            <div class="card border-0 shadow-sm mb-4 debt-student-card">
                 <div class="card-header d-flex justify-content-between align-items-center py-3 px-4"
-                     style="background: #FFF3E0; border-bottom: 1px solid #FFE0B2;">
+                     class="debt-student-header">
                     <div>
                         <span class="fw-bold fs-6">@student.FullName</span>
                         <span class="text-muted ms-2 small">
@@ -72,8 +72,7 @@
                                     <td class="text-end pe-4">
                                         <!-- Кнопка без галочки, оранжева -->
                                         <button type="button"
-                                                class="btn btn-sm confirm-payment-btn"
-                                                style="background-color: #FF6B00; color: white; border: none; border-radius: 8px;"
+                                                class="btn btn-sm confirm-payment-btn debt-pay-btn"
                                                 data-lesson-id="@lesson.LessonId"
                                                 onclick="confirmPayment('@lesson.LessonId', this)">
                                             Оплачено
@@ -90,40 +89,3 @@
 </div>
 
 @Html.AntiForgeryToken()
-
-<script>
-    async function confirmPayment(lessonId, btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
-        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
-        try {
-            const response = await fetch('/Debt/ConfirmPayment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': token,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: `lessonId=${lessonId}`
-            });
-
-            if (response.ok) {
-                const row = document.getElementById('lesson-row-' + lessonId);
-                row.style.background = '#E8F5E9';
-                btn.outerHTML = '<span class="text-success fw-semibold">Оплачено</span>';
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                const data = await response.json();
-                alert(data.message || 'Помилка підтвердження оплати.');
-                btn.disabled = false;
-                btn.innerHTML = 'Оплачено';
-            }
-        } catch (err) {
-            console.error(err);
-            btn.disabled = false;
-            btn.innerHTML = 'Оплачено';
-        }
-    }
-</script>

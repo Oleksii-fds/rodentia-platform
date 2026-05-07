@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const list = document.getElementById("notification-list");
     const badge = document.getElementById("notification-badge");
     const antiForgeryToken = document.querySelector('#notifications-antiforgery-form input[name="__RequestVerificationToken"]')?.value || "";
+    let signalRConnection = null;
 
     if (!list || !badge) {
         return;
@@ -66,7 +67,29 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    async function startSignalR() {
+        if (!window.signalR) {
+            return;
+        }
+
+        signalRConnection = new window.signalR.HubConnectionBuilder()
+            .withUrl("/hubs/notifications")
+            .withAutomaticReconnect()
+            .build();
+
+        signalRConnection.on("notificationReceived", async () => {
+            await loadNotifications();
+        });
+
+        try {
+            await signalRConnection.start();
+        } catch (error) {
+            console.error("SignalR connection failed:", error);
+        }
+    }
+
     loadNotifications();
+    startSignalR();
     setInterval(loadNotifications, 30000);
 });
 

@@ -6,7 +6,7 @@
 <div class="modal fade" id="removeStudentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header" style="background:#f4b667; border-bottom:1px solid #e8a142;">
+            <div class="modal-header remove-student-modal-header">
                 <h5 class="modal-title fw-bold">Підтвердження</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -14,7 +14,7 @@
                 Ви впевнені, що хочете видалити учня
                 <strong id="removeStudentName"></strong> зі списку?
             </div>
-            <div class="modal-footer" style="background:#f5efe4; border-top:1px solid #e8a142;">
+            <div class="modal-footer remove-student-modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
                 <form id="removeStudentForm" asp-action="RemoveStudent" method="post" class="d-inline">
                     @Html.AntiForgeryToken()
@@ -38,13 +38,11 @@
         <h2 class="fw-bold m-0">Мої учні</h2>
         <form asp-controller="Teacher" asp-action="AddStudent" method="post" class="d-flex gap-2">
             <input name="identifier"
-                   class="form-control"
+                   class="form-control teacher-add-input"
                    placeholder="Email або код учня..."
-                   style="width: 280px; border-radius: 10px;"
                    required />
             <button type="submit"
-                    class="btn btn-warning text-white fw-bold px-4"
-                    style="border-radius: 10px;">
+                    class="btn btn-warning text-white fw-bold px-4 teacher-add-btn">
                 Додати учня
             </button>
         </form>
@@ -65,7 +63,7 @@
         </div>
     }
 
-    <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+    <div class="card border-0 shadow-sm teacher-students-card">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -93,7 +91,7 @@
                                 <tr>
                                     <td class="ps-4 py-3 fw-bold">
                                         <button type="button"
-                                                class="btn btn-link text-dark text-decoration-none p-0 fw-bold"
+                                                class="btn btn-link text-dark text-decoration-none p-0 fw-bold student-profile-trigger"
                                                 onclick="viewStudentProfile('@student.Id')">
                                             @student.LastName @student.FirstName
                                         </button>
@@ -119,25 +117,3 @@
     </div>
 </div>
 
-<script>
-    function confirmRemove(studentId, studentName) {
-        document.getElementById('removeStudentId').value = studentId;
-        document.getElementById('removeStudentName').textContent = studentName;
-        new bootstrap.Modal(document.getElementById('removeStudentModal')).show();
-    }
-
-    function viewStudentProfile(studentId) {
-        fetch(`/Profiles/StudentProfile?id=${studentId}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Не вдалося завантажити профіль');
-            return response.text();
-        })
-        .then(html => {
-            document.getElementById('studentProfileContent').innerHTML = html;
-            new bootstrap.Modal(document.getElementById('studentProfileModal')).show();
-        })
-        .catch(err => alert('Помилка: ' + err.message));
-    }
-</script>

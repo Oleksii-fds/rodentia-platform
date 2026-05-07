@@ -7,6 +7,8 @@ using Rodentia.Core.Models;
 using Rodentia.Core.Services;
 using Rodentia.Data;
 using Rodentia.Data.Repositories;
+using Rodentia.Web.Hubs;
+using Rodentia.Web.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -68,9 +70,44 @@ builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
+builder.Services.AddSignalR();
+builder.Services.AddHostedService<NotificationEventsBackgroundService>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
+builder.Services.AddWebOptimizer(pipeline =>
+{
+    pipeline.AddCssBundle("/bundles/site.min.css",
+        "lib/bootstrap/dist/css/bootstrap.min.css",
+        "css/site.css",
+        "css/profile-modal.css",
+        "css/home.css",
+        "css/schedule.css",
+        "css/debt.css",
+        "css/teacher.css",
+        "css/student-profile-modal.css");
+
+    pipeline.AddCssBundle("/bundles/auth.min.css",
+        "lib/bootstrap/dist/css/bootstrap.min.css",
+        "css/site.css",
+        "css/auth.css");
+
+    pipeline.AddJavaScriptBundle("/bundles/site.min.js",
+        "lib/jquery/dist/jquery.min.js",
+        "lib/bootstrap/dist/js/bootstrap.bundle.min.js",
+        "js/site.js",
+        "js/profile-modal.js",
+        "js/notifications.js",
+        "js/schedule-create-lesson.js",
+        "js/home-timezones.js",
+        "js/debt.js",
+        "js/teacher-students.js");
+
+    pipeline.AddJavaScriptBundle("/bundles/auth.min.js",
+        "lib/jquery/dist/jquery.min.js",
+        "lib/bootstrap/dist/js/bootstrap.bundle.min.js",
+        "js/register.js");
+});
 
 var app = builder.Build();
 
@@ -86,6 +123,7 @@ if (!app.Environment.IsEnvironment("Testing"))
 }
 
 app.UseMiddleware<Rodentia.Web.Middleware.ExceptionHandlingMiddleware>();
+app.UseWebOptimizer();
 
 if (app.Environment.IsDevelopment())
 {
@@ -116,6 +154,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();
 

@@ -1,0 +1,27 @@
+.remove-student-modal-header {
+    background: #f4b667;
+    border-bottom: 1px solid #e8a142;
+}
+
+.remove-student-modal-footer {
+    background: #f5efe4;
+    border-top: 1px solid #e8a142;
+}
+
+.teacher-add-input {
+    width: 280px;
+    border-radius: 10px;
+}
+
+.teacher-add-btn {
+    border-radius: 10px;
+}
+
+.teacher-students-card {
+    border-radius: 15px;
+}
+
+.student-profile-trigger {
+    border: none;
+    background: transparent;
+}
