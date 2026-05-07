@@ -5,24 +5,25 @@ namespace Rodentia.Core.Models;
 
 public class RegisterViewModel
 {
-    [Required(ErrorMessage = "Повне ім'я є обов'язковим")]
-    [Display(Name = "Ім'я та Прізвище")]
-    public string FullName { get; set; } = null!; 
+    [Required(ErrorMessage = "Введіть ім'я")]
+    public string FirstName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Email є обов'язковим")]
-    [EmailAddress(ErrorMessage = "Некоректний формат Email")]
-    public string Email { get; set; } = null!;
+    [Required(ErrorMessage = "Введіть прізвище")]
+    public string LastName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Пароль є обов'язковим")]
-    [DataType(DataType.Password)]
-    [MinLength(6, ErrorMessage = "Пароль має бути не менше 6 символів")]
-    public string Password { get; set; } = null!;
+    [Required(ErrorMessage = "Введіть Email")]
+    [EmailAddress(ErrorMessage = "Невірний формат Email")]
+    public string Email { get; set; } = string.Empty;
 
-    [DataType(DataType.Password)]
-    [Display(Name = "Підтвердіть пароль")] 
-    [Compare("Password", ErrorMessage = "Паролі не збігаються")]
-    public string ConfirmPassword { get; set; } = null!;
+    [Required(ErrorMessage = "Введіть пароль")]
+    [MinLength(6, ErrorMessage = "Пароль мінімум 6 символів")]
+    public string Password { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Оберіть вашу роль")]
-    public UserRole Role { get; set; }
+    [Required(ErrorMessage = "Підтвердіть пароль")]
+    [Compare("Password", ErrorMessage = "Паролі не співпадають")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+
+    public UserRole Role { get; set; } = UserRole.Student;
+
+    public string FullName => $"{FirstName} {LastName}".Trim();
 }

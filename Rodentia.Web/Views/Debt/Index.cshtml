@@ -70,11 +70,13 @@
                                     </td>
                                     <td class="fw-semibold">@lesson.Price.ToString("F0") грн</td>
                                     <td class="text-end pe-4">
+                                        <!-- Кнопка без галочки, оранжева -->
                                         <button type="button"
-                                                class="btn btn-success btn-sm confirm-payment-btn"
+                                                class="btn btn-sm confirm-payment-btn"
+                                                style="background-color: #FF6B00; color: white; border: none; border-radius: 8px;"
                                                 data-lesson-id="@lesson.LessonId"
                                                 onclick="confirmPayment('@lesson.LessonId', this)">
-                                            <i class="bi bi-check-lg me-1"></i>Оплачено
+                                            Оплачено
                                         </button>
                                     </td>
                                 </tr>
@@ -110,19 +112,18 @@
             if (response.ok) {
                 const row = document.getElementById('lesson-row-' + lessonId);
                 row.style.background = '#E8F5E9';
-                btn.outerHTML = '<span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Оплачено</span>';
-
+                btn.outerHTML = '<span class="text-success fw-semibold">Оплачено</span>';
                 setTimeout(() => location.reload(), 1000);
             } else {
                 const data = await response.json();
                 alert(data.message || 'Помилка підтвердження оплати.');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Оплачено';
+                btn.innerHTML = 'Оплачено';
             }
         } catch (err) {
             console.error(err);
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Оплачено';
+            btn.innerHTML = 'Оплачено';
         }
     }
 </script>

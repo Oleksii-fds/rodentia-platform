@@ -4,7 +4,6 @@
     Layout = "_AuthLayout";
     ViewData["Title"] = "Реєстрація";
 }
-
 <style>
     .role-btn {
         border: none;
@@ -18,10 +17,10 @@
         cursor: pointer;
     }
 
-    .role-btn.active {
-        background-color: #FF6B00;
-        color: white;
-    }
+        .role-btn.active {
+            background-color: #FF6B00;
+            color: white;
+        }
 
     .role-label {
         font-weight: 700;
@@ -29,10 +28,9 @@
         margin-right: 15px;
     }
 </style>
-
 <form asp-action="Register" method="post" id="registerForm">
     <div asp-validation-summary="All" class="text-danger small mb-3 text-start"></div>
-    
+
     <div class="d-flex align-items-center justify-content-center mb-4">
         <span class="role-label">Хто ви?</span>
         <div class="d-flex gap-2">
@@ -42,35 +40,44 @@
         <input type="hidden" asp-for="Role" id="selectedRole" value="@UserRole.Student" />
     </div>
 
-    <div class="mb-3">
-        <input asp-for="FullName" class="form-control bg-light border-0 py-2" placeholder="Ім'я та Прізвище" style="border-radius: 10px;" />
+    <div class="row g-2 mb-3">
+        <div class="col-6">
+            <input asp-for="FirstName" class="form-control bg-light border-0 py-2"
+                   placeholder="Ім'я" style="border-radius: 10px;" />
+        </div>
+        <div class="col-6">
+            <input asp-for="LastName" class="form-control bg-light border-0 py-2"
+                   placeholder="Прізвище" style="border-radius: 10px;" />
+        </div>
     </div>
 
     <div class="mb-3">
-        <input asp-for="Email" class="form-control bg-light border-0 py-2" placeholder="Email" style="border-radius: 10px;" />
+        <input asp-for="Email" class="form-control bg-light border-0 py-2"
+               placeholder="Email" style="border-radius: 10px;" />
     </div>
-    
     <div class="mb-3">
-        <input asp-for="Password" type="password" class="form-control bg-light border-0 py-2" placeholder="Пароль" style="border-radius: 10px;" />
+        <input asp-for="Password" type="password" class="form-control bg-light border-0 py-2"
+               placeholder="Пароль" style="border-radius: 10px;" />
     </div>
-
     <div class="mb-4">
-        <input asp-for="ConfirmPassword" type="password" class="form-control bg-light border-0 py-2" placeholder="Підтвердіть пароль" style="border-radius: 10px;" />
+        <input asp-for="ConfirmPassword" type="password" class="form-control bg-light border-0 py-2"
+               placeholder="Підтвердіть пароль" style="border-radius: 10px;" />
     </div>
 
-    <button type="submit" class="btn w-100 text-white fw-bold py-2 mb-3" style="background-color: #FF6B00; border-radius: 10px;">
+    <button type="submit" class="btn w-100 text-white fw-bold py-2 mb-3"
+            style="background-color: #FF6B00; border-radius: 10px;">
         Зареєструватися
     </button>
-    
+
     <div class="text-center">
         <span class="small text-muted">Вже маєте акаунт? </span>
-        <a href="/Account/Login" class="text-decoration-none small" style="color: #5D5FEF; font-weight: 600;">Увійти</a>
+        <a href="/Account/Login" class="text-decoration-none small"
+           style="color: #5D5FEF; font-weight: 600;">Увійти</a>
     </div>
 </form>
-
 <script>
     document.querySelectorAll('.role-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             document.getElementById('selectedRole').value = this.dataset.role;

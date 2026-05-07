@@ -5,109 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rodentia - @ViewData["Title"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/profile-modal.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        :root {
-            --rodentia-orange: #FF6B00;
-            --rodentia-light: #FFF8F4;
-        }
-
-        body {
-            background-color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .sidebar {
-            width: 200px;
-            height: 100vh;
-            position: fixed;
-            border-right: 1px solid #eee;
-            padding: 20px;
-        }
-
-        .main-content {
-            margin-left: 200px;
-            padding: 20px;
-            background-color: white;
-            min-height: 100vh;
-        }
-
-        .nav-link.active-orange {
-            background-color: var(--rodentia-orange) !important;
-            color: white !important;
-            border-radius: 8px;
-        }
-
-        .nav-link {
-            color: #333;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-
-        .logo-text {
-            color: var(--rodentia-orange);
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 30px;
-        }
-
-        .navbar-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #eee;
-        }
-
-        .navbar-avatar-placeholder {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #6c757d;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-
-        .notification-bell-btn {
-            position: relative;
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            min-width: 18px;
-            height: 18px;
-            border-radius: 9px;
-            font-size: 0.7rem;
-            padding: 0 5px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .notification-menu {
-            width: 360px;
-            max-height: 420px;
-            overflow-y: auto;
-            padding: 0;
-        }
-
-        .notification-item {
-            border-bottom: 1px solid #f1f1f1;
-            padding: 10px 12px;
-        }
-    </style>
 </head>
 <body>
     <div class="sidebar">
-        <div class="logo-text">Rodentia</div>
+        <a asp-controller="Home" asp-action="Index" class="logo-text text-decoration-none d-block mb-4">Rodentia</a>
         <nav class="nav flex-column">
             <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Schedule" ? "active-orange" : "")"
                asp-controller="Schedule" asp-action="Index">
@@ -155,10 +59,8 @@
 
             <div class="dropdown me-3">
                 <button class="btn btn-light border notification-bell-btn"
-                        type="button"
-                        id="notificationsDropdown"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false">
+                        type="button" id="notificationsDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-bell"></i>
                     <span id="notification-badge" class="bg-danger text-white notification-badge d-none">0</span>
                 </button>
@@ -177,11 +79,11 @@
             <div class="d-flex align-items-center gap-2 me-3">
                 @if (!string.IsNullOrWhiteSpace(avatarPath))
                 {
-                    <img src="@avatarPath" alt="Аватар" class="navbar-avatar" />
+                    <img src="@avatarPath" alt="Аватар" class="navbar-avatar" id="navbar-avatar-img" />
                 }
                 else
                 {
-                    <div class="navbar-avatar-placeholder">@initial</div>
+                    <div class="navbar-avatar-placeholder" id="navbar-avatar-placeholder">@initial</div>
                 }
                 <div class="text-end">
                     <div class="fw-bold lh-1">@displayName</div>
@@ -207,5 +109,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/profile-modal.js" asp-append-version="true"></script>
     <script src="~/js/notifications.js" asp-append-version="true"></script>
+    <script src="~/js/schedule-create-lesson.js" asp-append-version="true"></script>
 </body>
 </html>
