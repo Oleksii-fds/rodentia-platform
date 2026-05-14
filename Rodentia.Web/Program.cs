@@ -13,12 +13,18 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Log.Logger = new LoggerConfiguration()
+var serilog = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
-    .WriteTo.Console()
-    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
-    .WriteTo.Seq("http://localhost:5341")
-    .CreateLogger();
+    .WriteTo.Console();
+
+if (builder.Environment.IsDevelopment())
+{
+    serilog = serilog
+        .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+        .WriteTo.Seq("http://localhost:5341");
+}
+
+Log.Logger = serilog.CreateLogger();
 
 builder.Host.UseSerilog();
 
@@ -131,13 +137,13 @@ if (app.Environment.IsDevelopment())
 }
 else if (app.Environment.IsStaging())
 {
-    // Staging
+    
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 else
 {
-    // Production
+    
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }

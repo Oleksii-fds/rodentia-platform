@@ -28,5 +28,8 @@ public enum NotificationType
     General = 0,
     LessonRescheduleRequested = 1,
     LessonRescheduleApproved = 2,
-    LessonRescheduleRejected = 3
+    LessonRescheduleRejected = 3,
+    LessonStartingSoon = 4,
+    LessonPaymentOverdue = 5,
+    RescheduleRequestPendingReview = 6
 }

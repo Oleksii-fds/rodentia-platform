@@ -51,7 +51,8 @@ public class AccountControllerTests
     {
         var model = new RegisterViewModel
         {
-            FullName = "Марія Манько",
+            FirstName = "Марія",
+            LastName = "Манько",
             Email = "maria@test.com",
             Password = "Password123!",
             ConfirmPassword = "Password123!",
@@ -95,7 +96,8 @@ public class AccountControllerTests
         var user = new User { Email = "maria@test.com", UserName = "maria@test.com" };
         var model = new RegisterViewModel
         {
-            FullName = "Марія Манько",
+            FirstName = "Марія",
+            LastName = "Манько",
             Email = "maria@test.com",
             Password = "Password123!",
             ConfirmPassword = "Password123!",

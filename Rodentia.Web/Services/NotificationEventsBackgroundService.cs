@@ -40,13 +40,26 @@ public sealed class NotificationEventsBackgroundService : BackgroundService
                 await ProcessOverduePaymentsAsync(dbContext, notificationService, stoppingToken);
                 await ProcessPendingRescheduleRequestsAsync(dbContext, notificationService, stoppingToken);
             }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Notification background scan failed");
             }
 
-            await Task.Delay(ScanInterval, stoppingToken);
+            try
+            {
+                await Task.Delay(ScanInterval, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
+
+        _logger.LogInformation("Notification events background service stopped");
     }
 
     private async Task ProcessUpcomingLessonsAsync(

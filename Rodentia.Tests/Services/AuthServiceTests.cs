@@ -51,9 +51,11 @@ public class AuthServiceTests
     {
         var model = new RegisterViewModel
         {
-            FullName = "Марія Манько",
+            FirstName = "Марія",
+            LastName = "Манько",
             Email = "manko@test.com",
             Password = "Password123!",
+            ConfirmPassword = "Password123!",
             Role = UserRole.Teacher
         };
 
@@ -74,9 +76,11 @@ public class AuthServiceTests
     {
         var model = new RegisterViewModel
         {
-            FullName = "Марія Манько",
+            FirstName = "Марія",
+            LastName = "Манько",
             Email = "manko@test.com",
             Password = "weak",
+            ConfirmPassword = "weak",
             Role = UserRole.Teacher
         };
 
